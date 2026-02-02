@@ -1,0 +1,3035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SilverStream Admin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0F172A;
+      color: #E2E8F0;
+      min-height: 100vh;
+    }
+    button { font-family: inherit; cursor: pointer; }
+    input, select, textarea { font-family: inherit; }
+    
+    /* Layout */
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 260px;
+      background: #1E293B;
+      padding: 24px;
+      border-right: 1px solid #334155;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .main {
+      margin-left: 260px;
+      flex: 1;
+      padding: 32px;
+    }
+    
+    /* Sidebar */
+    .logo { font-size: 24px; font-weight: bold; margin-bottom: 32px; color: #FFF; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      color: #94A3B8;
+      text-decoration: none;
+      margin-bottom: 4px;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-size: 15px;
+    }
+    .nav-item:hover { background: #334155; color: #FFF; }
+    .nav-item.active { background: #4F46E5; color: #FFF; }
+    .nav-section { font-size: 12px; color: #64748B; margin: 24px 0 12px; text-transform: uppercase; letter-spacing: 1px; }
+    
+    /* Cards */
+    .card {
+      background: #1E293B;
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid #334155;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .card-title { font-size: 18px; font-weight: 600; }
+    
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: #1E293B;
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid #334155;
+    }
+    .stat-value { font-size: 36px; font-weight: bold; color: #FFF; }
+    .stat-label { font-size: 14px; color: #94A3B8; margin-top: 4px; }
+    .stat-change { font-size: 13px; margin-top: 8px; }
+    .stat-change.up { color: #22C55E; }
+    .stat-change.down { color: #EF4444; }
+    
+    /* Tables */
+    .table { width: 100%; border-collapse: collapse; }
+    .table th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #64748B;
+      border-bottom: 1px solid #334155;
+    }
+    .table td {
+      padding: 16px;
+      border-bottom: 1px solid #334155;
+    }
+    .table tr:hover { background: #334155; }
+    
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary { background: #4F46E5; color: #FFF; }
+    .btn-primary:hover { background: #4338CA; }
+    .btn-secondary { background: #334155; color: #FFF; }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger { background: #DC2626; color: #FFF; }
+    .btn-success { background: #22C55E; color: #FFF; }
+    .btn-sm { padding: 6px 12px; font-size: 13px; }
+    
+    /* Forms */
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 14px; color: #94A3B8; margin-bottom: 8px; }
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #0F172A;
+      color: #FFF;
+      font-size: 15px;
+    }
+    .form-input:focus { outline: none; border-color: #4F46E5; }
+    
+    /* Badges */
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge-success { background: #166534; color: #86EFAC; }
+    .badge-warning { background: #854D0E; color: #FDE047; }
+    .badge-info { background: #1E40AF; color: #93C5FD; }
+    .badge-purple { background: #581C87; color: #D8B4FE; }
+    
+    /* Charts placeholder */
+    .chart-placeholder {
+      height: 200px;
+      background: linear-gradient(180deg, rgba(79,70,229,0.2) 0%, transparent 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: flex-end;
+      padding: 0 8px;
+      gap: 8px;
+    }
+    .chart-bar {
+      flex: 1;
+      background: #4F46E5;
+      border-radius: 4px 4px 0 0;
+      min-height: 20px;
+    }
+    
+    /* Grid layouts */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    
+    /* Activity icons */
+    .activity-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal {
+      background: #1E293B;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .modal-title { font-size: 20px; font-weight: 600; }
+    .modal-close {
+      background: none;
+      border: none;
+      color: #94A3B8;
+      font-size: 24px;
+    }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid #334155;
+    }
+    .tab {
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      color: #94A3B8;
+      font-size: 14px;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .tab:hover { color: #FFF; }
+    .tab.active { color: #FFF; border-bottom-color: #4F46E5; }
+    
+    /* Page header */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    .page-title { font-size: 28px; font-weight: bold; }
+    .page-subtitle { color: #94A3B8; margin-top: 4px; }
+    
+    /* Toggle */
+    .toggle {
+      width: 48px;
+      height: 26px;
+      background: #334155;
+      border-radius: 13px;
+      position: relative;
+      cursor: pointer;
+      border: none;
+    }
+    .toggle.active { background: #4F46E5; }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #FFF;
+      border-radius: 50%;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.2s;
+    }
+    .toggle.active::after { transform: translateX(22px); }
+    
+    /* Progress bar */
+    .progress-bar {
+      height: 8px;
+      background: #334155;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #4F46E5;
+      border-radius: 4px;
+    }
+    
+    /* Hidden */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="logo">🎵 SilverStream</div>
+      
+      <button class="nav-item active" data-page="dashboard">
+        📊 Dashboard
+      </button>
+      
+      <div class="nav-section">Content</div>
+      <button class="nav-item" data-page="videos">
+        📺 Video Library
+      </button>
+      <button class="nav-item" data-page="playlists">
+        📝 Playlists
+      </button>
+      <button class="nav-item" data-page="channels">
+        ▶️ YouTube Channels
+      </button>
+      
+      <div class="nav-section">Reports</div>
+      <button class="nav-item" data-page="analytics">
+        📈 Analytics
+      </button>
+      <button class="nav-item" data-page="sessions">
+        📋 Session Log
+      </button>
+      <button class="nav-item" data-page="compliance">
+        ✅ Compliance
+      </button>
+      
+      <div class="nav-section">Settings</div>
+      <button class="nav-item" data-page="features">
+        🎛️ Features
+      </button>
+      <button class="nav-item" data-page="facility">
+        🏥 Facility
+      </button>
+      <button class="nav-item" data-page="users">
+        👥 Users
+      </button>
+      <button class="nav-item" data-page="settings">
+        ⚙️ Settings
+      </button>
+
+      <div style="margin-top:auto;padding-top:24px;border-top:1px solid #334155;margin-top:32px;">
+        <a href="silverstream.html" class="nav-item" style="background:#4F46E5;color:#FFF;text-decoration:none;">
+          🎵 Open Player App
+        </a>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main" id="main-content">
+      <!-- Content injected by JS -->
+    </main>
+  </div>
+
+  <!-- Modal Container -->
+  <div id="modal-container"></div>
+
+  <script>
+    // ============================================
+    // SILVERSTREAM ADMIN DASHBOARD
+    // ============================================
+
+    // === MOCK DATA ===
+    const mockData = {
+      facility: {
+        name: 'Sunny Meadows Senior Living',
+        type: 'assisted',
+        address: '123 Care Lane, Springfield, IL 62701',
+        phone: '(555) 123-4567',
+        capacity: 120,
+        subscription: 'Premium',
+        renewalDate: '2026-03-15',
+      },
+      stats: {
+        totalSessions: 847,
+        sessionsThisWeek: 42,
+        avgSessionLength: 24,
+        totalPlaytime: 338,
+        activeResidents: 89,
+        popularActivity: 'Sing-Along',
+        topTrack: 'Amazing Grace',
+        downloadedTracks: 35,
+      },
+      recentSessions: [
+        { id: 1, date: '2025-01-31 14:30', track: 'Amazing Grace', activity: 'singalong', duration: 28, participants: 12, staff: 'Mary S.' },
+        { id: 2, date: '2025-01-31 10:00', track: 'Community Beat', activity: 'drumcircle', duration: 35, participants: 8, staff: 'John D.' },
+        { id: 3, date: '2025-01-30 15:00', track: '1950s Music Trivia', activity: 'trivia', duration: 45, participants: 15, staff: 'Mary S.' },
+        { id: 4, date: '2025-01-30 11:00', track: 'Swing Time', activity: 'movement', duration: 20, participants: 10, staff: 'Sarah K.' },
+        { id: 5, date: '2025-01-29 14:00', track: 'Peaceful Dreams', activity: 'relaxation', duration: 30, participants: 6, staff: 'John D.' },
+      ],
+      tracks: [
+        { id: 'track-001', title: 'Dance All Night', artist: 'The Jukebox Kings', era: '1950s', genre: 'Rock & Roll', duration: 165, plays: 47, downloaded: true },
+        { id: 'track-002', title: 'Sweet Memories', artist: 'The Jukebox Kings', era: '1950s', genre: 'Rock & Roll', duration: 195, plays: 23, downloaded: true },
+        { id: 'track-014', title: 'Moonlight Serenade', artist: 'Johnny Velvet', era: '1940s', genre: 'Big Band', duration: 210, plays: 89, downloaded: true },
+        { id: 'track-028', title: 'Amazing Grace', artist: 'Grace Notes Ensemble', era: 'Hymns', genre: 'Gospel', duration: 240, plays: 156, downloaded: true },
+        { id: 'track-033', title: 'Get Up and Dance', artist: 'The Groove Collective', era: '1960s', genre: 'Motown', duration: 175, plays: 67, downloaded: false },
+        { id: 'track-038', title: 'Gentle Rhythm', artist: 'SilverStream Percussion', era: 'Timeless', genre: 'Instrumental', duration: 480, plays: 34, downloaded: true },
+        { id: 'track-048', title: '1950s Music Trivia', artist: 'SilverStream', era: '1950s', genre: 'Trivia', duration: 600, plays: 28, downloaded: false },
+      ],
+      playlists: [
+        { id: 1, name: 'Morning Energizers', tracks: 8, duration: 32, lastUsed: '2025-01-31' },
+        { id: 2, name: 'Afternoon Relaxation', tracks: 5, duration: 25, lastUsed: '2025-01-30' },
+        { id: 3, name: 'Sunday Hymns', tracks: 6, duration: 28, lastUsed: '2025-01-26' },
+        { id: 4, name: 'Friday Dance Party', tracks: 10, duration: 40, lastUsed: '2025-01-24' },
+        { id: 5, name: 'Memory Care Gentle', tracks: 4, duration: 20, lastUsed: '2025-01-31' },
+      ],
+      users: [
+        { id: 1, name: 'Mary Smith', email: 'mary.s@sunnymeadows.com', role: 'Activity Director', lastActive: '2025-01-31', sessions: 234 },
+        { id: 2, name: 'John Davis', email: 'john.d@sunnymeadows.com', role: 'Activity Aide', lastActive: '2025-01-31', sessions: 156 },
+        { id: 3, name: 'Sarah Kim', email: 'sarah.k@sunnymeadows.com', role: 'Activity Aide', lastActive: '2025-01-30', sessions: 89 },
+        { id: 4, name: 'Admin User', email: 'admin@sunnymeadows.com', role: 'Administrator', lastActive: '2025-01-31', sessions: 12 },
+      ],
+      weeklyActivity: [65, 78, 82, 71, 89, 45, 52], // Sun-Sat
+      monthlyTrend: [320, 345, 378, 412], // Last 4 weeks
+    };
+
+    // Activity type colors
+    const activityColors = {
+      singalong: '#4F46E5',
+      drumcircle: '#DC2626',
+      trivia: '#059669',
+      movement: '#D97706',
+      relaxation: '#0891B2',
+      bingo: '#9333EA',
+    };
+
+    const activityLabels = {
+      singalong: 'Sing-Along',
+      drumcircle: 'Drum Circle',
+      trivia: 'Trivia',
+      movement: 'Movement',
+      relaxation: 'Relaxation',
+      bingo: 'Bingo',
+    };
+
+    const activityIcons = {
+      singalong: '🎤',
+      drumcircle: '🥁',
+      trivia: '❓',
+      movement: '💃',
+      relaxation: '🌿',
+      bingo: '🎯',
+      youtube: '📺',
+    };
+
+    // Feature configurations - default values
+    const defaultFeatureConfig = {
+      activities: {
+        singalong: { enabled: true, name: 'Sing-Along', icon: '🎤', color: '#4F46E5', description: 'Display synchronized lyrics for group singing activities' },
+        drumcircle: { enabled: true, name: 'Drum Circle', icon: '🥁', color: '#DC2626', description: 'Visual beat indicators for rhythm-based activities' },
+        trivia: { enabled: true, name: 'Trivia', icon: '❓', color: '#059669', description: 'Interactive music trivia with pause-and-answer format' },
+        movement: { enabled: true, name: 'Movement', icon: '💃', color: '#D97706', description: 'Chair exercises and gentle movement activities' },
+        relaxation: { enabled: true, name: 'Relaxation', icon: '🌿', color: '#0891B2', description: 'Calming music and guided relaxation sessions' },
+        bingo: { enabled: true, name: 'Bingo', icon: '🎯', color: '#9333EA', description: 'Music bingo games with customizable cards' },
+        youtube: { enabled: true, name: 'YouTube', icon: '📺', color: '#FF0000', description: 'Stream curated YouTube videos for activities' },
+      },
+      modules: {
+        offlineMode: { enabled: true, name: 'Offline Mode', icon: '📥', description: 'Download content for use without internet connection' },
+        analytics: { enabled: true, name: 'Analytics', icon: '📈', description: 'Track session data and generate usage reports' },
+        compliance: { enabled: true, name: 'Compliance Reporting', icon: '✅', description: 'Generate reports for state regulatory requirements' },
+        playlists: { enabled: true, name: 'Custom Playlists', icon: '📝', description: 'Create and manage custom playlists for your facility' },
+        multiUser: { enabled: true, name: 'Multi-User Access', icon: '👥', description: 'Multiple staff accounts with role-based permissions' },
+        captions: { enabled: true, name: 'Closed Captions', icon: '💬', description: 'Display captions and subtitles during playback' },
+        highContrast: { enabled: true, name: 'High Contrast Mode', icon: '🌓', description: 'Enhanced visibility options for low vision users' },
+        memoryCare: { enabled: false, name: 'Memory Care Mode', icon: '🧠', description: 'Simplified interface designed for memory care units' },
+      }
+    };
+
+    // Load from localStorage or use defaults
+    let featureConfig = JSON.parse(localStorage.getItem('silverstreamFeatures')) || JSON.parse(JSON.stringify(defaultFeatureConfig));
+
+    // Save feature config to localStorage
+    function saveToLocalStorage() {
+      localStorage.setItem('silverstreamFeatures', JSON.stringify(featureConfig));
+    }
+
+    // === STATE ===
+    let currentPage = 'dashboard';
+
+    // === HELPERS ===
+    function formatDuration(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function formatMinutes(mins) {
+      if (mins < 60) return `${mins} min`;
+      const hours = Math.floor(mins / 60);
+      const remaining = mins % 60;
+      return remaining ? `${hours}h ${remaining}m` : `${hours}h`;
+    }
+
+    // === RENDER PAGES ===
+    function renderDashboard() {
+      const d = mockData;
+      return `
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-subtitle">Welcome back! Here's what's happening at ${d.facility.name}</p>
+          </div>
+          <button class="btn btn-primary" onclick="showNewSessionModal()">
+            ➕ Log Activity Session
+          </button>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value">${d.stats.sessionsThisWeek}</div>
+            <div class="stat-label">Sessions This Week</div>
+            <div class="stat-change up">↑ 12% vs last week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${d.stats.avgSessionLength}m</div>
+            <div class="stat-label">Avg Session Length</div>
+            <div class="stat-change up">↑ 3 min vs last week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${d.stats.activeResidents}</div>
+            <div class="stat-label">Active Residents</div>
+            <div class="stat-change up">74% participation rate</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${d.stats.downloadedTracks}</div>
+            <div class="stat-label">Downloaded Tracks</div>
+            <div class="stat-change">Ready for offline use</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <!-- Weekly Activity Chart -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Weekly Activity</h3>
+              <span style="color:#94A3B8;font-size:14px;">Sessions per day</span>
+            </div>
+            <div class="chart-placeholder">
+              ${d.weeklyActivity.map((val, i) => `
+                <div class="chart-bar" style="height:${val * 2}px;" title="${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][i]}: ${val} sessions"></div>
+              `).join('')}
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:12px;color:#64748B;">
+              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+          </div>
+
+          <!-- Popular Activities -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Activity Breakdown</h3>
+              <span style="color:#94A3B8;font-size:14px;">This week</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+              ${[
+                { type: 'singalong', pct: 35, count: 15 },
+                { type: 'drumcircle', pct: 25, count: 10 },
+                { type: 'trivia', pct: 18, count: 8 },
+                { type: 'movement', pct: 12, count: 5 },
+                { type: 'relaxation', pct: 10, count: 4 },
+              ].map(a => `
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                    <span>${activityLabels[a.type]}</span>
+                    <span style="color:#94A3B8;">${a.count} sessions (${a.pct}%)</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width:${a.pct}%;background:${activityColors[a.type]}"></div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Sessions -->
+        <div class="card" style="margin-top:24px;">
+          <div class="card-header">
+            <h3 class="card-title">Recent Sessions</h3>
+            <button class="btn btn-secondary btn-sm" onclick="navigate('sessions')">View All →</button>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date/Time</th>
+                <th>Track</th>
+                <th>Activity</th>
+                <th>Duration</th>
+                <th>Participants</th>
+                <th>Staff</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${d.recentSessions.slice(0, 5).map(s => `
+                <tr>
+                  <td>${s.date}</td>
+                  <td><strong>${s.track}</strong></td>
+                  <td><span class="badge" style="background:${activityColors[s.activity]}33;color:${activityColors[s.activity]};">${activityLabels[s.activity]}</span></td>
+                  <td>${s.duration} min</td>
+                  <td>${s.participants}</td>
+                  <td>${s.staff}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderVideoLibrary() {
+      // Load videos from localStorage
+      const videos = JSON.parse(localStorage.getItem('silverstreamVideos')) || [];
+
+      return `
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">📺 Video Library</h1>
+            <p class="page-subtitle">${videos.length} YouTube videos available</p>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <input type="text" class="form-input" placeholder="Search videos..." style="width:250px;" id="video-search" oninput="filterVideos(this.value)">
+            <button class="btn btn-primary" onclick="showAddVideoModal()">➕ Add Video</button>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;" id="video-grid">
+          ${videos.map(v => `
+            <div class="card" style="padding:0;overflow:hidden;">
+              <div style="position:relative;padding-bottom:56.25%;background:#000;">
+                <img src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg"
+                     style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;"
+                     onerror="this.style.display='none'">
+                <div style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.8);padding:4px 8px;border-radius:4px;font-size:12px;color:#FFF;">
+                  ${formatDuration(v.duration)}
+                </div>
+                <div style="position:absolute;top:8px;left:8px;" title="${v.embedStatus === 'ok' ? 'Verified embeddable' : v.embedStatus === 'error' ? 'Embed failed - may not play' : 'Not tested'}">
+                  ${v.embedStatus === 'ok' ? '<span style="background:#10B981;padding:4px 8px;border-radius:4px;font-size:11px;color:#FFF;">✓ Verified</span>' : v.embedStatus === 'error' ? '<span style="background:#EF4444;padding:4px 8px;border-radius:4px;font-size:11px;color:#FFF;">⚠ May fail</span>' : ''}
+                </div>
+              </div>
+              <div style="padding:16px;">
+                <h3 style="font-size:16px;margin-bottom:4px;">${v.title}</h3>
+                <p style="color:#94A3B8;font-size:14px;margin-bottom:8px;">${v.artist}</p>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+                  <span class="badge">${v.era}</span>
+                  <span class="badge">${v.genre}</span>
+                  ${v.activityTypes.map(type => {
+                    const color = activityColors[type] || '#666';
+                    return `<span class="badge" style="background:${color}33;color:${color};">${activityLabels[type] || type}</span>`;
+                  }).join('')}
+                </div>
+                <div style="display:flex;gap:8px;">
+                  <button class="btn btn-secondary btn-sm" onclick="previewVideo('${v.videoId}')">▶️ Preview</button>
+                  <button class="btn btn-secondary btn-sm" onclick="editVideo('${v.id}')">✏️ Edit</button>
+                  <button class="btn btn-secondary btn-sm" onclick="deleteVideo('${v.id}')" style="color:#EF4444;">🗑️</button>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        ${videos.length === 0 ? `
+          <div class="card" style="text-align:center;padding:60px;">
+            <div style="font-size:64px;margin-bottom:16px;">📺</div>
+            <h3 style="margin-bottom:8px;">No videos added yet</h3>
+            <p style="color:#94A3B8;margin-bottom:24px;">Add YouTube videos to build your activity library</p>
+            <button class="btn btn-primary" onclick="showAddVideoModal()">➕ Add Your First Video</button>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    function filterVideos(query) {
+      const q = query.toLowerCase();
+      document.querySelectorAll('#video-grid > div').forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
+    function previewVideo(videoId) {
+      window.open('https://www.youtube.com/watch?v=' + videoId, '_blank');
+    }
+
+    function deleteVideo(id) {
+      if (confirm('Delete this video from your library?')) {
+        let videos = JSON.parse(localStorage.getItem('silverstreamVideos')) || [];
+        videos = videos.filter(v => v.id !== id);
+        localStorage.setItem('silverstreamVideos', JSON.stringify(videos));
+        navigate('videos');
+      }
+    }
+
+    function editVideo(id) {
+      const videos = JSON.parse(localStorage.getItem('silverstreamVideos')) || [];
+      const video = videos.find(v => v.id === id);
+      if (video) {
+        showAddVideoModal(video);
+      }
+    }
+
+    function renderPlaylists() {
+      return `
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Playlists</h1>
+            <p class="page-subtitle">Custom playlists for your facility</p>
+          </div>
+          <button class="btn btn-primary" onclick="showCreatePlaylistModal()">
+            ➕ Create Playlist
+          </button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;">
+          ${mockData.playlists.map(p => `
+            <div class="card" style="cursor:pointer;" onclick="editPlaylist(${p.id})">
+              <div style="display:flex;justify-content:space-between;align-items:start;">
+                <div>
+                  <h3 style="font-size:18px;margin-bottom:8px;">${p.name}</h3>
+                  <p style="color:#94A3B8;font-size:14px;">${p.tracks} tracks • ${p.duration} min</p>
+                </div>
+                <button class="btn btn-secondary btn-sm">▶️ Play</button>
+              </div>
+              <div style="margin-top:16px;padding-top:16px;border-top:1px solid #334155;font-size:13px;color:#64748B;">
+                Last used: ${p.lastUsed}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // === YOUTUBE CHANNELS ===
+    const savedChannels = [
+      { id: 'ch-001', name: 'Oldies Music', url: '@OldiesMusic', subscribers: '1.2M', videos: 450, approved: true },
+      { id: 'ch-002', name: 'Jazz Classics', url: '@JazzClassics', subscribers: '890K', videos: 320, approved: true },
+      { id: 'ch-003', name: 'Worship Music', url: '@WorshipMusic', subscribers: '2.1M', videos: 680, approved: true },
+      { id: 'ch-004', name: 'Music Therapy', url: '@MusicTherapy', subscribers: '450K', videos: 180, approved: true },
+      { id: 'ch-005', name: 'Senior Fitness', url: '@SeniorFitness', subscribers: '320K', videos: 95, approved: true },
+    ];
+
+    function renderChannels() {
+      return `
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">▶️ YouTube Channels</h1>
+            <p class="page-subtitle">Manage approved YouTube channels for content</p>
+          </div>
+          <button class="btn btn-primary" onclick="showAddChannelModal()">➕ Add Channel</button>
+        </div>
+
+        <!-- Content Guidelines -->
+        <div class="card" style="margin-bottom:24px;border:1px solid #D97706;">
+          <h3 class="card-title" style="color:#FCD34D;margin-bottom:12px;">⚠️ YouTube Content Guidelines</h3>
+          <div class="grid-2">
+            <div>
+              <h4 style="color:#22C55E;margin-bottom:8px;">✓ Appropriate Content</h4>
+              <ul style="color:#94A3B8;line-height:1.8;padding-left:20px;font-size:14px;">
+                <li>Music compilations from 1940s-1980s</li>
+                <li>Sing-along videos with lyrics</li>
+                <li>Chair exercise and gentle movement</li>
+                <li>Relaxation and meditation music</li>
+                <li>Hymns and worship music</li>
+                <li>Nature scenes with calming music</li>
+              </ul>
+            </div>
+            <div>
+              <h4 style="color:#EF4444;margin-bottom:8px;">✗ Avoid</h4>
+              <ul style="color:#94A3B8;line-height:1.8;padding-left:20px;font-size:14px;">
+                <li>Content with many ads</li>
+                <li>Fast-paced or overstimulating content</li>
+                <li>Content with sad or distressing themes</li>
+                <li>News or current events</li>
+                <li>Content not suitable for seniors</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Approved Channels -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📡 Approved Channels</h3>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:16px;">
+            ${savedChannels.map(c => `
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;background:#0F172A;border-radius:12px;">
+                <div style="display:flex;align-items:center;gap:16px;">
+                  <div style="width:56px;height:56px;background:#DC2626;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;">▶️</div>
+                  <div>
+                    <div style="font-weight:600;font-size:16px;">${c.name}</div>
+                    <div style="color:#94A3B8;font-size:13px;">${c.url}</div>
+                    <div style="color:#64748B;font-size:12px;margin-top:4px;">${c.subscribers} subscribers • ${c.videos} videos</div>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <a href="https://youtube.com/${c.url}" target="_blank" class="btn btn-secondary btn-sm">🔗 Visit</a>
+                  <button class="btn btn-secondary btn-sm" style="color:#EF4444;">🗑️ Remove</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- How to Add Videos -->
+        <div class="card" style="margin-top:24px;">
+          <h3 class="card-title" style="margin-bottom:16px;">📝 How to Add Videos</h3>
+          <ol style="color:#94A3B8;line-height:2;padding-left:20px;">
+            <li>Find a video on YouTube that's appropriate for your residents</li>
+            <li>Copy the video URL or video ID</li>
+            <li>Go to <strong>Video Library</strong> and click <strong>Add Video</strong></li>
+            <li>Paste the URL and fill in the details (title, category, activity type)</li>
+            <li>The video will be available in SilverStream for activities</li>
+          </ol>
+        </div>
+      `;
+    }
+
+    function searchYouTube() {
+      // Placeholder for search functionality
+    }
+
+    function previewYouTube(videoId) {
+      document.getElementById('modal-container').innerHTML = `
+        <div class="modal-overlay" onclick="closeModal(event)">
+          <div class="modal" onclick="event.stopPropagation()" style="max-width:800px;">
+            <div class="modal-header">
+              <h2 class="modal-title">Video Preview</h2>
+              <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;background:#000;">
+              <iframe 
+                style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"
+                src="https://www.youtube.com/embed/\${videoId}?autoplay=0&rel=0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+              </iframe>
+            </div>
+            <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end;">
+              <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+              <button class="btn btn-success">✓ Approve for Library</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function showAddVideoModal(existingVideo = null) {
+      const isEdit = !!existingVideo;
+      document.getElementById('modal-container').innerHTML = `
+        <div class="modal-overlay" onclick="closeModal(event)">
+          <div class="modal" onclick="event.stopPropagation()" style="max-width:600px;">
+            <div class="modal-header">
+              <h2 class="modal-title">${isEdit ? 'Edit' : 'Add'} YouTube Video</h2>
+              <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">YouTube URL or Video ID *</label>
+              <div style="display:flex;gap:8px;">
+                <input type="text" class="form-input" id="video-url" value="${existingVideo?.videoId || ''}" placeholder="https://www.youtube.com/watch?v=... or just the video ID" style="flex:1;">
+                <button type="button" class="btn btn-secondary" onclick="testVideoEmbed()" id="test-embed-btn">🔍 Test</button>
+              </div>
+              <p style="color:#64748B;font-size:12px;margin-top:4px;">Example: dQw4w9WgXcQ or https://youtube.com/watch?v=dQw4w9WgXcQ</p>
+              <div id="embed-test-result" style="margin-top:8px;display:none;"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Video Title *</label>
+              <input type="text" class="form-input" id="video-title" value="${existingVideo?.title || ''}" placeholder="Enter a descriptive title">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Channel/Artist</label>
+              <input type="text" class="form-input" id="video-artist" value="${existingVideo?.artist || ''}" placeholder="Channel or artist name">
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Era</label>
+                <select class="form-input" id="video-era">
+                  <option value="Timeless" ${existingVideo?.era === 'Timeless' ? 'selected' : ''}>Timeless</option>
+                  <option value="1940s" ${existingVideo?.era === '1940s' ? 'selected' : ''}>1940s</option>
+                  <option value="1950s" ${existingVideo?.era === '1950s' ? 'selected' : ''}>1950s</option>
+                  <option value="1960s" ${existingVideo?.era === '1960s' ? 'selected' : ''}>1960s</option>
+                  <option value="1970s" ${existingVideo?.era === '1970s' ? 'selected' : ''}>1970s</option>
+                  <option value="Hymns" ${existingVideo?.era === 'Hymns' ? 'selected' : ''}>Hymns</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Genre</label>
+                <select class="form-input" id="video-genre">
+                  <option value="Easy Listening">Easy Listening</option>
+                  <option value="Big Band">Big Band</option>
+                  <option value="Rock & Roll">Rock & Roll</option>
+                  <option value="Country">Country</option>
+                  <option value="Gospel">Gospel</option>
+                  <option value="Motown">Motown</option>
+                  <option value="Instrumental">Instrumental</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Activity Types</label>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                ${Object.entries(activityLabels).map(([id, label]) => `
+                  <label style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:#0F172A;border-radius:8px;cursor:pointer;">
+                    <input type="checkbox" class="activity-checkbox" value="${id}" ${existingVideo?.activityTypes?.includes(id) ? 'checked' : ''}> ${label}
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Approximate Duration (minutes)</label>
+              <input type="number" class="form-input" id="video-duration" value="${existingVideo ? Math.round(existingVideo.duration / 60) : 60}" min="1" max="300">
+            </div>
+
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;">
+              <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+              <button class="btn btn-primary" onclick="saveVideo('${existingVideo?.id || ''}')">${isEdit ? 'Save Changes' : 'Add Video'}</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function extractVideoId(input) {
+      // Handle full URLs or just video IDs
+      const match = input.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+      return match ? match[1] : input.trim();
+    }
+
+    function saveVideo(existingId) {
+      const videoId = extractVideoId(document.getElementById('video-url').value);
+      const title = document.getElementById('video-title').value.trim();
+      const artist = document.getElementById('video-artist').value.trim() || 'Unknown';
+      const era = document.getElementById('video-era').value;
+      const genre = document.getElementById('video-genre').value;
+      const duration = parseInt(document.getElementById('video-duration').value) * 60;
+      const activityTypes = Array.from(document.querySelectorAll('.activity-checkbox:checked')).map(cb => cb.value);
+
+      if (!videoId || !title) {
+        alert('Please enter a YouTube URL and title');
+        return;
+      }
+
+      let videos = JSON.parse(localStorage.getItem('silverstreamVideos')) || [];
+
+      // Check if video was tested
+      const resultDiv = document.getElementById('embed-test-result');
+      const wasVerified = resultDiv && resultDiv.innerHTML.includes('✅');
+
+      const videoData = {
+        id: existingId || 'yt-' + Date.now(),
+        videoId,
+        title,
+        artist,
+        era,
+        genre,
+        duration,
+        activityTypes: activityTypes.length ? activityTypes : ['relaxation'],
+        mood: 'upbeat',
+        embedStatus: wasVerified ? 'ok' : (existingId ? videos.find(v => v.id === existingId)?.embedStatus : null)
+      };
+
+      if (existingId) {
+        const index = videos.findIndex(v => v.id === existingId);
+        if (index !== -1) videos[index] = videoData;
+      } else {
+        videos.push(videoData);
+      }
+
+      localStorage.setItem('silverstreamVideos', JSON.stringify(videos));
+      closeModal();
+      navigate('videos');
+      alert(existingId ? 'Video updated!' : 'Video added to library!');
+    }
+
+    // Test if a video can be embedded
+    let testPlayer = null;
+    function testVideoEmbed() {
+      const input = document.getElementById('video-url').value;
+      const videoId = extractVideoId(input);
+      const resultDiv = document.getElementById('embed-test-result');
+      const testBtn = document.getElementById('test-embed-btn');
+
+      if (!videoId || videoId.length !== 11) {
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = '<span style="color:#EF4444;">⚠️ Please enter a valid YouTube URL or video ID</span>';
+        return;
+      }
+
+      testBtn.disabled = true;
+      testBtn.textContent = '⏳ Testing...';
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = '<span style="color:#64748B;">Testing video embed...</span>';
+
+      // Create hidden test iframe
+      const testFrame = document.createElement('div');
+      testFrame.id = 'test-player';
+      testFrame.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;';
+      document.body.appendChild(testFrame);
+
+      // Load YouTube API if needed
+      if (!window.YT || !window.YT.Player) {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(tag);
+        window.onYouTubeIframeAPIReady = () => runEmbedTest(videoId, resultDiv, testBtn);
+      } else {
+        runEmbedTest(videoId, resultDiv, testBtn);
+      }
+    }
+
+    function runEmbedTest(videoId, resultDiv, testBtn) {
+      let timeout = setTimeout(() => {
+        cleanupTest();
+        resultDiv.innerHTML = '<span style="color:#F59E0B;">⚠️ Test timed out - video may have issues</span>';
+        testBtn.disabled = false;
+        testBtn.textContent = '🔍 Test';
+      }, 8000);
+
+      if (testPlayer) {
+        try { testPlayer.destroy(); } catch(e) {}
+      }
+
+      testPlayer = new YT.Player('test-player', {
+        videoId: videoId,
+        width: 1,
+        height: 1,
+        playerVars: { autoplay: 0 },
+        events: {
+          onReady: function() {
+            clearTimeout(timeout);
+            cleanupTest();
+            resultDiv.innerHTML = '<span style="color:#10B981;">✅ Video can be embedded - OK to add!</span>';
+            testBtn.disabled = false;
+            testBtn.textContent = '🔍 Test';
+          },
+          onError: function(e) {
+            clearTimeout(timeout);
+            cleanupTest();
+            const msg = e.data === 101 || e.data === 150
+              ? 'Embedding disabled by owner'
+              : e.data === 100
+              ? 'Video not found'
+              : 'Cannot embed (Error ' + e.data + ')';
+            resultDiv.innerHTML = '<span style="color:#EF4444;">❌ ' + msg + ' - Do not add this video</span>';
+            testBtn.disabled = false;
+            testBtn.textContent = '🔍 Test';
+          }
+        }
+      });
+    }
+
+    function cleanupTest() {
+      if (testPlayer) {
+        try { testPlayer.destroy(); } catch(e) {}
+        testPlayer = null;
+      }
+      const el = document.getElementById('test-player');
+      if (el) el.remove();
+    }
+
+    function showAddChannelModal() {
+      document.getElementById('modal-container').innerHTML = `
+        <div class="modal-overlay" onclick="closeModal(event)">
+          <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+              <h2 class="modal-title">Add YouTube Channel</h2>
+              <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Channel URL or Name</label>
+              <input type="text" class="form-input" placeholder="https://www.youtube.com/@channelname">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Primary Category</label>
+              <select class="form-input">
+                <option value="">Select category...</option>
+                <option>Music - Oldies</option>
+                <option>Music - Hymns & Gospel</option>
+                <option>Music - Relaxation</option>
+                <option>Exercise - Chair Yoga</option>
+                <option>Exercise - Movement</option>
+                <option>Music Therapy</option>
+                <option>Nature & Relaxation</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Why add this channel?</label>
+              <textarea class="form-input" rows="2" placeholder="Brief description of content..."></textarea>
+            </div>
+
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;">
+              <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+              <button class="btn btn-primary">Add Channel</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAnalytics() {
+      return `
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Analytics</h1>
+            <p class="page-subtitle">Usage statistics and trends</p>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <select class="form-input" style="width:150px;">
+              <option>Last 7 days</option>
+              <option>Last 30 days</option>
+              <option>Last 90 days</option>
+              <option>This year</option>
+            </select>
+            <button class="btn btn-secondary">📊 Export Report</button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value">${mockData.stats.totalSessions}</div>
+            <div class="stat-label">Total Sessions</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${formatMinutes(mockData.stats.totalPlaytime)}</div>
+            <div class="stat-label">Total Playtime</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${mockData.stats.activeResidents}</div>
+            <div class="stat-label">Unique Participants</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${mockData.stats.avgSessionLength}m</div>
+            <div class="stat-label">Avg Session Length</div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:24px;">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Monthly Trend</h3>
+            </div>
+            <div class="chart-placeholder">
+              ${mockData.monthlyTrend.map(val => `
+                <div class="chart-bar" style="height:${val / 3}px;"></div>
+              `).join('')}
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:12px;color:#64748B;">
+              <span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Top Tracks</h3>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              ${mockData.tracks.sort((a,b) => b.plays - a.plays).slice(0, 5).map((t, i) => `
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="font-size:20px;font-weight:bold;color:#64748B;width:24px;">${i + 1}</span>
+                  <div style="flex:1;">
+                    <div style="font-weight:500;">${t.title}</div>
+                    <div style="color:#94A3B8;font-size:13px;">${t.artist}</div>
+                  </div>
+                  <span style="color:#94A3B8;">${t.plays} plays</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:24px;">
+          <div class="card-header">
+            <h3 class="card-title">Staff Performance</h3>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Staff Member</th>
+                <th>Sessions Led</th>
+                <th>Total Participants</th>
+                <th>Avg Duration</th>
+                <th>Most Used Activity</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${mockData.users.filter(u => u.role !== 'Administrator').map(u => `
+                <tr>
+                  <td><strong>${u.name}</strong></td>
+                  <td>${u.sessions}</td>
+                  <td>${u.sessions * 8}</td>
+                  <td>26 min</td>
+                  <td><span class="badge badge-purple">Sing-Along</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderSessions() {
+      return `
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Session Log</h1>
+            <p class="page-subtitle">Complete activity history</p>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <input type="date" class="form-input" style="width:150px;">
+            <select class="form-input" style="width:150px;">
+              <option value="">All Activities</option>
+              <option value="singalong">Sing-Along</option>
+              <option value="drumcircle">Drum Circle</option>
+              <option value="trivia">Trivia</option>
+              <option value="movement">Movement</option>
+              <option value="relaxation">Relaxation</option>
+              <option value="bingo">Bingo</option>
+            </select>
+            <button class="btn btn-primary" onclick="showNewSessionModal()">➕ Log Session</button>
+            <button class="btn btn-secondary">📊 Export</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date/Time</th>
+                <th>Track</th>
+                <th>Activity Type</th>
+                <th>Duration</th>
+                <th>Participants</th>
+                <th>Staff</th>
+                <th>Notes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[...mockData.recentSessions, ...mockData.recentSessions].map(s => `
+                <tr>
+                  <td>${s.date}</td>
+                  <td><strong>${s.track}</strong></td>
+                  <td><span class="badge" style="background:${activityColors[s.activity]}33;color:${activityColors[s.activity]};">${activityLabels[s.activity]}</span></td>
+                  <td>${s.duration} min</td>
+                  <td>${s.participants}</td>
+                  <td>${s.staff}</td>
+                  <td><span style="color:#64748B;">—</span></td>
+                  <td>
+                    <button class="btn btn-secondary btn-sm">✏️</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderCompliance() {
+      return `
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Compliance Reports</h1>
+            <p class="page-subtitle">Activity documentation for state reporting</p>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" style="color:#22C55E;">✓</div>
+            <div class="stat-label">January 2025</div>
+            <div class="stat-change">Requirements met</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${mockData.stats.totalSessions}</div>
+            <div class="stat-label">Documented Sessions</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">74%</div>
+            <div class="stat-label">Resident Participation</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">5</div>
+            <div class="stat-label">Activity Types Used</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:24px;">
+          <div class="card-header">
+            <h3 class="card-title">Monthly Reports</h3>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th>Sessions</th>
+                <th>Participants</th>
+                <th>Hours</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>January 2025</strong></td>
+                <td>187</td>
+                <td>89</td>
+                <td>78.5</td>
+                <td><span class="badge badge-success">Complete</span></td>
+                <td>
+                  <button class="btn btn-secondary btn-sm">📄 PDF</button>
+                  <button class="btn btn-secondary btn-sm">📊 CSV</button>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>December 2024</strong></td>
+                <td>165</td>
+                <td>82</td>
+                <td>71.2</td>
+                <td><span class="badge badge-success">Complete</span></td>
+                <td>
+                  <button class="btn btn-secondary btn-sm">📄 PDF</button>
+                  <button class="btn btn-secondary btn-sm">📊 CSV</button>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>November 2024</strong></td>
+                <td>158</td>
+                <td>78</td>
+                <td>65.8</td>
+                <td><span class="badge badge-success">Complete</span></td>
+                <td>
+                  <button class="btn btn-secondary btn-sm">📄 PDF</button>
+                  <button class="btn btn-secondary btn-sm">📊 CSV</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card" style="margin-top:24px;">
+          <div class="card-header">
+            <h3 class="card-title">Compliance Checklist</h3>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            ${[
+              { item: 'Minimum 4 activities per week', status: true, note: '6 completed' },
+              { item: 'Music therapy sessions documented', status: true, note: '12 this month' },
+              { item: 'Cognitive stimulation activities', status: true, note: '8 trivia sessions' },
+              { item: 'Physical activity programs', status: true, note: '5 movement sessions' },
+              { item: 'Participant counts recorded', status: true, note: 'All sessions logged' },
+              { item: 'Staff signatures on file', status: false, note: '2 pending' },
+            ].map(c => `
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:#0F172A;border-radius:8px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="font-size:20px;">${c.status ? '✅' : '⚠️'}</span>
+                  <div>
+                    <div style="font-weight:500;">${c.item}</div>
+                    <div style="color:#94A3B8;font-size:13px;">${c.note}</div>
+                  </div>
+                </div>
+                ${!c.status ? '<button class="btn btn-primary btn-sm">Resolve</button>' : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderFacility() {
+      const f = mockData.facility;
+      return `
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Facility Settings</h1>
+            <p class="page-subtitle">Manage your facility information</p>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3 class="card-title" style="margin-bottom:24px;">Facility Information</h3>
+            <div class="form-group">
+              <label class="form-label">Facility Name</label>
+              <input type="text" class="form-input" value="${f.name}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Facility Type</label>
+              <select class="form-input">
+                <option ${f.type === 'assisted' ? 'selected' : ''}>Assisted Living</option>
+                <option ${f.type === 'memory' ? 'selected' : ''}>Memory Care</option>
+                <option ${f.type === 'independent' ? 'selected' : ''}>Independent Living</option>
+                <option ${f.type === 'nursing' ? 'selected' : ''}>Skilled Nursing</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Address</label>
+              <input type="text" class="form-input" value="${f.address}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone</label>
+              <input type="text" class="form-input" value="${f.phone}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Resident Capacity</label>
+              <input type="number" class="form-input" value="${f.capacity}">
+            </div>
+            <button class="btn btn-primary">Save Changes</button>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title" style="margin-bottom:24px;">Subscription</h3>
+            <div style="padding:24px;background:#0F172A;border-radius:12px;margin-bottom:24px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div style="font-size:24px;font-weight:bold;color:#4F46E5;">${f.subscription}</div>
+                  <div style="color:#94A3B8;">Current Plan</div>
+                </div>
+                <span class="badge badge-success">Active</span>
+              </div>
+              <div style="margin-top:16px;padding-top:16px;border-top:1px solid #334155;color:#94A3B8;font-size:14px;">
+                Renews: ${f.renewalDate}
+              </div>
+            </div>
+            
+            <h4 style="margin-bottom:12px;">Plan Features</h4>
+            <ul style="color:#94A3B8;line-height:2;padding-left:20px;">
+              <li>Unlimited sessions</li>
+              <li>Full track library access</li>
+              <li>Offline downloads</li>
+              <li>Compliance reporting</li>
+              <li>Priority support</li>
+              <li>Custom playlists</li>
+            </ul>
+            
+            <button class="btn btn-secondary" style="margin-top:24px;">Manage Subscription</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderUsers() {
+      return `
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">User Management</h1>
+            <p class="page-subtitle">Manage staff access</p>
+          </div>
+          <button class="btn btn-primary" onclick="showAddUserModal()">
+            ➕ Add User
+          </button>
+        </div>
+
+        <div class="card">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Last Active</th>
+                <th>Sessions</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${mockData.users.map(u => `
+                <tr>
+                  <td><strong>${u.name}</strong></td>
+                  <td>${u.email}</td>
+                  <td><span class="badge badge-info">${u.role}</span></td>
+                  <td>${u.lastActive}</td>
+                  <td>${u.sessions}</td>
+                  <td><span class="badge badge-success">Active</span></td>
+                  <td>
+                    <button class="btn btn-secondary btn-sm">✏️</button>
+                    <button class="btn btn-secondary btn-sm">🔑</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card" style="margin-top:24px;">
+          <h3 class="card-title" style="margin-bottom:20px;">Role Permissions</h3>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Permission</th>
+                <th>Administrator</th>
+                <th>Activity Director</th>
+                <th>Activity Aide</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[
+                { perm: 'Run activity sessions', admin: true, director: true, aide: true },
+                { perm: 'View analytics', admin: true, director: true, aide: false },
+                { perm: 'Export reports', admin: true, director: true, aide: false },
+                { perm: 'Manage playlists', admin: true, director: true, aide: true },
+                { perm: 'Download content', admin: true, director: true, aide: false },
+                { perm: 'Manage users', admin: true, director: false, aide: false },
+                { perm: 'Facility settings', admin: true, director: false, aide: false },
+                { perm: 'Billing & subscription', admin: true, director: false, aide: false },
+              ].map(p => `
+                <tr>
+                  <td>${p.perm}</td>
+                  <td>${p.admin ? '✅' : '—'}</td>
+                  <td>${p.director ? '✅' : '—'}</td>
+                  <td>${p.aide ? '✅' : '—'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderSettings() {
+      return `
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Settings</h1>
+            <p class="page-subtitle">App preferences and configuration</p>
+          </div>
+        </div>
+
+        <!-- Settings Tabs -->
+        <div class="tabs">
+          <button class="tab active" onclick="showSettingsTab('display')">Display</button>
+          <button class="tab" onclick="showSettingsTab('audio')">Audio</button>
+          <button class="tab" onclick="showSettingsTab('session')">Sessions</button>
+          <button class="tab" onclick="showSettingsTab('content')">Content</button>
+          <button class="tab" onclick="showSettingsTab('notifications')">Notifications</button>
+          <button class="tab" onclick="showSettingsTab('devices')">Devices</button>
+          <button class="tab" onclick="showSettingsTab('memory-care')">Memory Care</button>
+          <button class="tab" onclick="showSettingsTab('data')">Data & Privacy</button>
+          <button class="tab" onclick="showSettingsTab('integrations')">Integrations</button>
+          <button class="tab" onclick="showSettingsTab('youtube')">YouTube</button>
+        </div>
+
+        <div id="settings-content">
+          <!-- Display Settings (Default) -->
+          <div id="tab-display" class="settings-tab">
+            <div class="grid-2">
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:24px;">🖥️ Display Settings</h3>
+                
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Default Font Scale</div>
+                    <div style="color:#94A3B8;font-size:13px;">Starting text size for new sessions</div>
+                  </div>
+                  <select class="form-input" style="width:120px;">
+                    <option>100%</option>
+                    <option>125%</option>
+                    <option selected>150%</option>
+                    <option>175%</option>
+                    <option>200%</option>
+                    <option>250%</option>
+                  </select>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">High Contrast Mode</div>
+                    <div style="color:#94A3B8;font-size:13px;">Enhanced visibility for low vision</div>
+                  </div>
+                  <button class="toggle" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Color Theme</div>
+                    <div style="color:#94A3B8;font-size:13px;">Interface color scheme</div>
+                  </div>
+                  <select class="form-input" style="width:150px;">
+                    <option selected>Dark (Default)</option>
+                    <option>Light</option>
+                    <option>High Contrast Dark</option>
+                    <option>High Contrast Light</option>
+                    <option>Warm (Reduced Blue)</option>
+                  </select>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Show Captions by Default</div>
+                    <div style="color:#94A3B8;font-size:13px;">Display closed captions on all tracks</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Caption Size</div>
+                    <div style="color:#94A3B8;font-size:13px;">Text size for closed captions</div>
+                  </div>
+                  <select class="form-input" style="width:120px;">
+                    <option>Small</option>
+                    <option selected>Medium</option>
+                    <option>Large</option>
+                    <option>Extra Large</option>
+                  </select>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;">
+                  <div>
+                    <div style="font-weight:500;">Caption Background</div>
+                    <div style="color:#94A3B8;font-size:13px;">Caption box styling</div>
+                  </div>
+                  <select class="form-input" style="width:150px;">
+                    <option selected>Semi-transparent</option>
+                    <option>Solid Black</option>
+                    <option>Solid White</option>
+                    <option>None (Text Only)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:24px;">🎨 Visual Effects</h3>
+                
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Reduce Motion</div>
+                    <div style="color:#94A3B8;font-size:13px;">Minimize animations and transitions</div>
+                  </div>
+                  <button class="toggle" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Beat Indicator Style</div>
+                    <div style="color:#94A3B8;font-size:13px;">Visual style for drum circle mode</div>
+                  </div>
+                  <select class="form-input" style="width:150px;">
+                    <option selected>Circles (Default)</option>
+                    <option>Squares</option>
+                    <option>Pulsing Background</option>
+                    <option>Simple Numbers</option>
+                  </select>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Lyrics Display Style</div>
+                    <div style="color:#94A3B8;font-size:13px;">How sing-along lyrics appear</div>
+                  </div>
+                  <select class="form-input" style="width:150px;">
+                    <option selected>Highlighted Box</option>
+                    <option>Bouncing Ball</option>
+                    <option>Karaoke Style</option>
+                    <option>Simple Text</option>
+                  </select>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Screen Timeout</div>
+                    <div style="color:#94A3B8;font-size:13px;">Keep screen on during playback</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;">
+                  <div>
+                    <div style="font-weight:500;">Full Screen Mode</div>
+                    <div style="color:#94A3B8;font-size:13px;">Auto full screen when playing</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Audio Settings -->
+          <div id="tab-audio" class="settings-tab hidden">
+            <div class="grid-2">
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:24px;">🔊 Audio Settings</h3>
+                
+                <div class="form-group">
+                  <label class="form-label">Default Volume</label>
+                  <input type="range" min="0" max="100" value="70" style="width:100%;">
+                  <div style="display:flex;justify-content:space-between;color:#94A3B8;font-size:12px;margin-top:4px;">
+                    <span>0%</span><span>70%</span><span>100%</span>
+                  </div>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Volume Limit</div>
+                    <div style="color:#94A3B8;font-size:13px;">Maximum volume level allowed</div>
+                  </div>
+                  <select class="form-input" style="width:120px;">
+                    <option>50%</option>
+                    <option>75%</option>
+                    <option selected>100%</option>
+                  </select>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Fade Between Tracks</div>
+                    <div style="color:#94A3B8;font-size:13px;">Smooth transition between songs</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Crossfade Duration</div>
+                    <div style="color:#94A3B8;font-size:13px;">Seconds to blend tracks</div>
+                  </div>
+                  <select class="form-input" style="width:120px;">
+                    <option>1 second</option>
+                    <option selected>2 seconds</option>
+                    <option>3 seconds</option>
+                    <option>5 seconds</option>
+                  </select>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;">
+                  <div>
+                    <div style="font-weight:500;">Normalize Volume</div>
+                    <div style="color:#94A3B8;font-size:13px;">Keep all tracks at similar volume</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:24px;">🎧 Playback Settings</h3>
+                
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Auto-play Next Track</div>
+                    <div style="color:#94A3B8;font-size:13px;">Continue to next track in playlist</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Repeat Mode</div>
+                    <div style="color:#94A3B8;font-size:13px;">What happens at end of playlist</div>
+                  </div>
+                  <select class="form-input" style="width:150px;">
+                    <option>Stop</option>
+                    <option selected>Repeat Playlist</option>
+                    <option>Repeat Track</option>
+                    <option>Shuffle</option>
+                  </select>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Pause Between Tracks</div>
+                    <div style="color:#94A3B8;font-size:13px;">Wait time before next track</div>
+                  </div>
+                  <select class="form-input" style="width:120px;">
+                    <option selected>None</option>
+                    <option>2 seconds</option>
+                    <option>5 seconds</option>
+                    <option>10 seconds</option>
+                  </select>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;">
+                  <div>
+                    <div style="font-weight:500;">Audio Output</div>
+                    <div style="color:#94A3B8;font-size:13px;">Where to play sound</div>
+                  </div>
+                  <select class="form-input" style="width:150px;">
+                    <option selected>Device Speakers</option>
+                    <option>Bluetooth Speaker</option>
+                    <option>HDMI/TV Audio</option>
+                    <option>AUX Output</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Session Settings -->
+          <div id="tab-session" class="settings-tab hidden">
+            <div class="grid-2">
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:24px;">📋 Session Logging</h3>
+                
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Auto-log Sessions</div>
+                    <div style="color:#94A3B8;font-size:13px;">Automatically record session data</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Require Participant Count</div>
+                    <div style="color:#94A3B8;font-size:13px;">Prompt for count after each session</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Require Staff Selection</div>
+                    <div style="color:#94A3B8;font-size:13px;">Staff member must be assigned</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Session Notes</div>
+                    <div style="color:#94A3B8;font-size:13px;">Prompt for notes after session</div>
+                  </div>
+                  <select class="form-input" style="width:150px;">
+                    <option>Disabled</option>
+                    <option selected>Optional</option>
+                    <option>Required</option>
+                  </select>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;">
+                  <div>
+                    <div style="font-weight:500;">Minimum Session Length</div>
+                    <div style="color:#94A3B8;font-size:13px;">Sessions shorter won't be logged</div>
+                  </div>
+                  <select class="form-input" style="width:120px;">
+                    <option>None</option>
+                    <option selected>1 minute</option>
+                    <option>5 minutes</option>
+                    <option>10 minutes</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:24px;">⏰ Session Defaults</h3>
+                
+                <div class="form-group">
+                  <label class="form-label">Default Activity Mode</label>
+                  <select class="form-input">
+                    <option>Passive (Watch)</option>
+                    <option selected>Sing-Along</option>
+                    <option>Drum Circle</option>
+                    <option>Trivia</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Default Participant Estimate</label>
+                  <input type="number" class="form-input" value="10" min="1" max="100">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Default Staff Member</label>
+                  <select class="form-input">
+                    <option value="">Select each time...</option>
+                    <option>Mary Smith</option>
+                    <option>John Davis</option>
+                    <option>Sarah Kim</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Session Timeout</label>
+                  <select class="form-input">
+                    <option>15 minutes</option>
+                    <option selected>30 minutes</option>
+                    <option>1 hour</option>
+                    <option>Never</option>
+                  </select>
+                  <div style="color:#94A3B8;font-size:12px;margin-top:4px;">Auto-end session after inactivity</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content Preferences -->
+          <div id="tab-content" class="settings-tab hidden">
+            <div class="card">
+              <h3 class="card-title" style="margin-bottom:24px;">🎵 Content Preferences</h3>
+              
+              <div class="grid-3">
+                <div>
+                  <h4 style="margin-bottom:12px;">Preferred Eras</h4>
+                  ${['1920s-1930s', '1940s', '1950s', '1960s', '1970s', '1980s', 'Hymns/Timeless'].map((era, i) => `
+                    <label style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;">
+                      <input type="checkbox" ${i < 5 ? 'checked' : ''}> ${era}
+                    </label>
+                  `).join('')}
+                </div>
+                <div>
+                  <h4 style="margin-bottom:12px;">Preferred Genres</h4>
+                  ${['Big Band / Swing', 'Rock & Roll', 'Doo-Wop', 'Country / Western', 'Gospel / Hymns', 'Motown / Soul', 'Classical', 'Folk / Americana', 'Jazz', 'Easy Listening'].map((genre, i) => `
+                    <label style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;">
+                      <input type="checkbox" ${i < 6 ? 'checked' : ''}> ${genre}
+                    </label>
+                  `).join('')}
+                </div>
+                <div>
+                  <h4 style="margin-bottom:12px;">Activity Types</h4>
+                  ${['Sing-Along', 'Drum Circle', 'Trivia', 'Movement / Exercise', 'Relaxation / Calm', 'Reminiscence', 'Chair Yoga', 'Music Bingo'].map((type, i) => `
+                    <label style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;">
+                      <input type="checkbox" ${i < 5 ? 'checked' : ''}> ${type}
+                    </label>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:24px;">
+              <h3 class="card-title" style="margin-bottom:24px;">🚫 Content Filtering</h3>
+              
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                <div>
+                  <div style="font-weight:500;">Exclude Sad/Melancholy Songs</div>
+                  <div style="color:#94A3B8;font-size:13px;">Hide songs with sad themes</div>
+                </div>
+                <button class="toggle" onclick="this.classList.toggle('active')"></button>
+              </div>
+
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                <div>
+                  <div style="font-weight:500;">Exclude Religious Content</div>
+                  <div style="color:#94A3B8;font-size:13px;">Hide hymns and gospel music</div>
+                </div>
+                <button class="toggle" onclick="this.classList.toggle('active')"></button>
+              </div>
+
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                <div>
+                  <div style="font-weight:500;">Exclude Fast-Tempo Songs</div>
+                  <div style="color:#94A3B8;font-size:13px;">Hide songs over 130 BPM</div>
+                </div>
+                <button class="toggle" onclick="this.classList.toggle('active')"></button>
+              </div>
+
+              <div class="form-group" style="margin-top:16px;">
+                <label class="form-label">Blocked Tracks</label>
+                <textarea class="form-input" rows="3" placeholder="Enter track IDs to hide from library..."></textarea>
+                <div style="color:#94A3B8;font-size:12px;margin-top:4px;">One track ID per line</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div id="tab-notifications" class="settings-tab hidden">
+            <div class="grid-2">
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:24px;">🔔 Notification Settings</h3>
+                
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Enable Notifications</div>
+                    <div style="color:#94A3B8;font-size:13px;">Receive app notifications</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Daily Activity Reminder</div>
+                    <div style="color:#94A3B8;font-size:13px;">Remind to run daily activities</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div class="form-group" style="margin-top:16px;">
+                  <label class="form-label">Reminder Time</label>
+                  <input type="time" class="form-input" value="09:00">
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">New Content Alerts</div>
+                    <div style="color:#94A3B8;font-size:13px;">Notify when new tracks added</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;">
+                  <div>
+                    <div style="font-weight:500;">Weekly Summary Email</div>
+                    <div style="color:#94A3B8;font-size:13px;">Activity summary every Monday</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:24px;">📅 Scheduled Reminders</h3>
+                
+                <div style="background:#0F172A;border-radius:8px;padding:16px;margin-bottom:12px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                      <div style="font-weight:500;">Morning Sing-Along</div>
+                      <div style="color:#94A3B8;font-size:13px;">Mon, Wed, Fri at 10:00 AM</div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm">Edit</button>
+                  </div>
+                </div>
+
+                <div style="background:#0F172A;border-radius:8px;padding:16px;margin-bottom:12px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                      <div style="font-weight:500;">Afternoon Drum Circle</div>
+                      <div style="color:#94A3B8;font-size:13px;">Tue, Thu at 2:00 PM</div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm">Edit</button>
+                  </div>
+                </div>
+
+                <div style="background:#0F172A;border-radius:8px;padding:16px;margin-bottom:12px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                      <div style="font-weight:500;">Friday Trivia</div>
+                      <div style="color:#94A3B8;font-size:13px;">Fri at 3:00 PM</div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm">Edit</button>
+                  </div>
+                </div>
+
+                <button class="btn btn-primary" style="width:100%;margin-top:12px;">+ Add Reminder</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Devices -->
+          <div id="tab-devices" class="settings-tab hidden">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">📱 Connected Devices</h3>
+                <button class="btn btn-primary">+ Add Device</button>
+              </div>
+              
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Device</th>
+                    <th>Type</th>
+                    <th>Location</th>
+                    <th>Last Active</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Activity Room iPad</strong></td>
+                    <td>iPad Pro 12.9"</td>
+                    <td>Main Activity Room</td>
+                    <td>2 minutes ago</td>
+                    <td><span class="badge badge-success">Online</span></td>
+                    <td><button class="btn btn-secondary btn-sm">Configure</button></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Dining Hall Tablet</strong></td>
+                    <td>Samsung Galaxy Tab</td>
+                    <td>Dining Hall</td>
+                    <td>1 hour ago</td>
+                    <td><span class="badge badge-success">Online</span></td>
+                    <td><button class="btn btn-secondary btn-sm">Configure</button></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Memory Care TV</strong></td>
+                    <td>Fire TV Stick</td>
+                    <td>Memory Care Unit</td>
+                    <td>3 days ago</td>
+                    <td><span class="badge badge-warning">Offline</span></td>
+                    <td><button class="btn btn-secondary btn-sm">Configure</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="grid-2" style="margin-top:24px;">
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:24px;">🖥️ TV/Kiosk Mode</h3>
+                
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Enable Kiosk Mode</div>
+                    <div style="color:#94A3B8;font-size:13px;">Lock app to full screen</div>
+                  </div>
+                  <button class="toggle" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Hide Admin Access</div>
+                    <div style="color:#94A3B8;font-size:13px;">Require PIN to access settings</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div class="form-group" style="margin-top:16px;">
+                  <label class="form-label">Admin PIN</label>
+                  <input type="password" class="form-input" value="****" style="width:150px;">
+                </div>
+              </div>
+
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:24px;">🎮 Remote Control</h3>
+                
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Simple Remote Mode</div>
+                    <div style="color:#94A3B8;font-size:13px;">Works with basic TV remotes</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;">
+                  <div>
+                    <div style="font-weight:500;">Voice Control</div>
+                    <div style="color:#94A3B8;font-size:13px;">Enable voice commands</div>
+                  </div>
+                  <button class="toggle" onclick="this.classList.toggle('active')"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Memory Care -->
+          <div id="tab-memory-care" class="settings-tab hidden">
+            <div class="card">
+              <h3 class="card-title" style="margin-bottom:8px;">🧠 Memory Care Mode</h3>
+              <p style="color:#94A3B8;margin-bottom:24px;">Special settings optimized for residents with dementia or cognitive impairment</p>
+              
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                <div>
+                  <div style="font-weight:500;">Enable Memory Care Mode</div>
+                  <div style="color:#94A3B8;font-size:13px;">Activates all memory care optimizations</div>
+                </div>
+                <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+              </div>
+            </div>
+
+            <div class="grid-2" style="margin-top:24px;">
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:24px;">🎵 Content Adjustments</h3>
+                
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Prefer Familiar Songs</div>
+                    <div style="color:#94A3B8;font-size:13px;">Prioritize well-known classics</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Slower Tempo Only</div>
+                    <div style="color:#94A3B8;font-size:13px;">Exclude fast-paced music</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Longer Track Loops</div>
+                    <div style="color:#94A3B8;font-size:13px;">Repeat songs for familiarity</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;">
+                  <div>
+                    <div style="font-weight:500;">Avoid Sudden Changes</div>
+                    <div style="color:#94A3B8;font-size:13px;">Smooth transitions, no surprises</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:24px;">🖥️ Interface Adjustments</h3>
+                
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Extra Large Controls</div>
+                    <div style="color:#94A3B8;font-size:13px;">200%+ button sizes</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Simplified Interface</div>
+                    <div style="color:#94A3B8;font-size:13px;">Fewer options, clearer choices</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Calming Color Palette</div>
+                    <div style="color:#94A3B8;font-size:13px;">Soft blues and greens</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;">
+                  <div>
+                    <div style="font-weight:500;">Disable Trivia Mode</div>
+                    <div style="color:#94A3B8;font-size:13px;">Can cause frustration</div>
+                  </div>
+                  <button class="toggle" onclick="this.classList.toggle('active')"></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:24px;">
+              <h3 class="card-title" style="margin-bottom:24px;">📊 Sundowning Support</h3>
+              <p style="color:#94A3B8;margin-bottom:16px;">Automatic adjustments during late afternoon/evening hours</p>
+              
+              <div class="grid-2">
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                    <div>
+                      <div style="font-weight:500;">Enable Sundowning Mode</div>
+                      <div style="color:#94A3B8;font-size:13px;">Auto-activate in evening</div>
+                    </div>
+                    <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                  </div>
+                  
+                  <div class="form-group" style="margin-top:16px;">
+                    <label class="form-label">Start Time</label>
+                    <input type="time" class="form-input" value="16:00">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="form-label">End Time</label>
+                    <input type="time" class="form-input" value="20:00">
+                  </div>
+                </div>
+                <div>
+                  <h4 style="margin-bottom:12px;">During Sundowning Hours:</h4>
+                  <ul style="color:#94A3B8;line-height:2;padding-left:20px;">
+                    <li>Only relaxation and calm music</li>
+                    <li>Reduced screen brightness</li>
+                    <li>Warmer color temperature</li>
+                    <li>Lower default volume</li>
+                    <li>No interactive activities</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Data & Privacy -->
+          <div id="tab-data" class="settings-tab hidden">
+            <div class="grid-2">
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:24px;">💾 Data Management</h3>
+                
+                <div class="form-group">
+                  <label class="form-label">Data Retention Period</label>
+                  <select class="form-input">
+                    <option>3 months</option>
+                    <option>6 months</option>
+                    <option selected>1 year</option>
+                    <option>2 years</option>
+                    <option>Forever</option>
+                  </select>
+                  <div style="color:#94A3B8;font-size:12px;margin-top:4px;">How long to keep session history</div>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Auto-Backup</div>
+                    <div style="color:#94A3B8;font-size:13px;">Weekly backup of all data</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="margin-top:24px;display:flex;flex-direction:column;gap:12px;">
+                  <button class="btn btn-secondary">📥 Export All Data (CSV)</button>
+                  <button class="btn btn-secondary">📥 Export All Data (PDF)</button>
+                  <button class="btn btn-secondary">📤 Import Data</button>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:24px;">🔒 Privacy Settings</h3>
+                
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Anonymous Analytics</div>
+                    <div style="color:#94A3B8;font-size:13px;">Share usage data to improve app</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Exclude Resident Names</div>
+                    <div style="color:#94A3B8;font-size:13px;">Don't store identifying info</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="margin-top:24px;padding:16px;background:#7F1D1D;border-radius:8px;">
+                  <h4 style="color:#FCA5A5;margin-bottom:8px;">⚠️ Danger Zone</h4>
+                  <p style="color:#FECACA;font-size:13px;margin-bottom:12px;">These actions cannot be undone</p>
+                  <button class="btn btn-danger btn-sm">Delete All Session Data</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Integrations -->
+          <div id="tab-integrations" class="settings-tab hidden">
+            <div class="card">
+              <h3 class="card-title" style="margin-bottom:24px;">🔗 Third-Party Integrations</h3>
+              
+              <div style="display:grid;gap:16px;">
+                ${[
+                  { name: 'Google Calendar', desc: 'Sync activity schedule', icon: '📅', connected: true },
+                  { name: 'PointClickCare', desc: 'EHR integration for documentation', icon: '🏥', connected: false },
+                  { name: 'MatrixCare', desc: 'Activity documentation sync', icon: '📋', connected: false },
+                  { name: 'Slack', desc: 'Session notifications to staff', icon: '💬', connected: true },
+                  { name: 'Microsoft Teams', desc: 'Session notifications to staff', icon: '👥', connected: false },
+                  { name: 'Alexa', desc: 'Voice control via Echo devices', icon: '🔊', connected: false },
+                ].map(i => `
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:20px;background:#0F172A;border-radius:12px;">
+                    <div style="display:flex;align-items:center;gap:16px;">
+                      <span style="font-size:32px;">${i.icon}</span>
+                      <div>
+                        <div style="font-weight:500;font-size:16px;">${i.name}</div>
+                        <div style="color:#94A3B8;font-size:13px;">${i.desc}</div>
+                      </div>
+                    </div>
+                    ${i.connected 
+                      ? '<button class="btn btn-success btn-sm">✓ Connected</button>'
+                      : '<button class="btn btn-primary btn-sm">Connect</button>'}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:24px;">
+              <h3 class="card-title" style="margin-bottom:24px;">🔑 API Access</h3>
+              
+              <div class="form-group">
+                <label class="form-label">API Key</label>
+                <div style="display:flex;gap:12px;">
+                  <input type="text" class="form-input" value="sk_live_xxxxxxxxxxxxxxxxxxxxx" readonly style="font-family:monospace;">
+                  <button class="btn btn-secondary">Copy</button>
+                  <button class="btn btn-secondary">Regenerate</button>
+                </div>
+              </div>
+
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;">
+                <div>
+                  <div style="font-weight:500;">Enable API Access</div>
+                  <div style="color:#94A3B8;font-size:13px;">Allow external systems to read data</div>
+                </div>
+                <button class="toggle" onclick="this.classList.toggle('active')"></button>
+              </div>
+
+              <a href="#" style="color:#4F46E5;font-size:14px;">View API Documentation →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- YouTube Settings Tab -->
+        <div id="tab-youtube" class="settings-tab hidden">
+          <div class="card" style="margin-bottom:24px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <h3 class="card-title">▶️ YouTube Integration</h3>
+                <p style="color:#94A3B8;margin-top:4px;">Stream YouTube content directly in activities</p>
+              </div>
+              <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <h3 class="card-title" style="margin-bottom:24px;">🔑 YouTube API</h3>
+              
+              <div class="form-group">
+                <label class="form-label">YouTube Data API Key</label>
+                <input type="password" class="form-input" value="AIzaSy********************" placeholder="Enter your API key">
+                <p style="color:#64748B;font-size:12px;margin-top:4px;">Required for search and video info</p>
+              </div>
+
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                <div>
+                  <div style="font-weight:500;">API Status</div>
+                  <div style="color:#94A3B8;font-size:13px;">Connection to YouTube API</div>
+                </div>
+                <span class="badge badge-success">Connected</span>
+              </div>
+
+              <div style="display:flex;gap:12px;margin-top:16px;">
+                <button class="btn btn-secondary">Test Connection</button>
+                <a href="https://console.cloud.google.com" target="_blank" class="btn btn-secondary">Get API Key →</a>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 class="card-title" style="margin-bottom:24px;">⚙️ Playback Settings</h3>
+              
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                <div>
+                  <div style="font-weight:500;">Auto-hide YouTube UI</div>
+                  <div style="color:#94A3B8;font-size:13px;">Hide YouTube controls after playback starts</div>
+                </div>
+                <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+              </div>
+
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                <div>
+                  <div style="font-weight:500;">Disable Related Videos</div>
+                  <div style="color:#94A3B8;font-size:13px;">Don't show recommendations at end</div>
+                </div>
+                <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+              </div>
+
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                <div>
+                  <div style="font-weight:500;">Enable Captions</div>
+                  <div style="color:#94A3B8;font-size:13px;">Show YouTube closed captions</div>
+                </div>
+                <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+              </div>
+
+              <div class="form-group" style="margin-top:16px;">
+                <label class="form-label">Default Quality</label>
+                <select class="form-input">
+                  <option>Auto</option>
+                  <option>720p (HD)</option>
+                  <option selected>1080p (Full HD)</option>
+                  <option>4K (if available)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:24px;">
+            <h3 class="card-title" style="margin-bottom:24px;">🛡️ Content Safety</h3>
+            
+            <div class="grid-2">
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Restricted Mode</div>
+                    <div style="color:#94A3B8;font-size:13px;">Filter potentially inappropriate content</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+                  <div>
+                    <div style="font-weight:500;">Require Approval</div>
+                    <div style="color:#94A3B8;font-size:13px;">Videos must be approved before use</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;">
+                  <div>
+                    <div style="font-weight:500;">Hide Comments</div>
+                    <div style="color:#94A3B8;font-size:13px;">Never show YouTube comments</div>
+                  </div>
+                  <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                </div>
+              </div>
+
+              <div>
+                <h4 style="margin-bottom:12px;">Blocked Keywords</h4>
+                <textarea class="form-input" rows="4" placeholder="Enter keywords to filter, one per line...">death
+violence
+inappropriate
+explicit</textarea>
+                <p style="color:#64748B;font-size:12px;margin-top:4px;">Videos with these words in title/description won't appear</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:24px;">
+            <h3 class="card-title" style="margin-bottom:24px;">📡 Approved Channels</h3>
+            <p style="color:#94A3B8;margin-bottom:16px;">Only allow videos from these YouTube channels</p>
+            
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #334155;">
+              <div>
+                <div style="font-weight:500;">Channel Whitelist Mode</div>
+                <div style="color:#94A3B8;font-size:13px;">Only allow videos from approved channels</div>
+              </div>
+              <button class="toggle" onclick="this.classList.toggle('active')"></button>
+            </div>
+
+            <div class="form-group" style="margin-top:16px;">
+              <label class="form-label">Whitelisted Channel IDs</label>
+              <textarea class="form-input" rows="4" placeholder="Enter YouTube channel IDs, one per line...">UC_oldiesmusic_official
+UC_hymns_worship
+UC_seniorexercise</textarea>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:24px;display:flex;gap:12px;">
+          <button class="btn btn-primary">Save All Settings</button>
+          <button class="btn btn-secondary">Reset to Defaults</button>
+        </div>
+      `;
+    }
+
+    // === MODALS ===
+    function showNewSessionModal() {
+      document.getElementById('modal-container').innerHTML = `
+        <div class="modal-overlay" onclick="closeModal(event)">
+          <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+              <h2 class="modal-title">Log Activity Session</h2>
+              <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Track Played</label>
+              <select class="form-input">
+                <option value="">Select a track...</option>
+                ${mockData.tracks.map(t => `<option value="${t.id}">${t.title} - ${t.artist}</option>`).join('')}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Activity Type</label>
+              <select class="form-input">
+                <option value="singalong">Sing-Along</option>
+                <option value="drumcircle">Drum Circle</option>
+                <option value="trivia">Trivia</option>
+                <option value="movement">Movement</option>
+                <option value="relaxation">Relaxation</option>
+              </select>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-input" value="${new Date().toISOString().split('T')[0]}">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Time</label>
+                <input type="time" class="form-input" value="${new Date().toTimeString().slice(0,5)}">
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Duration (minutes)</label>
+                <input type="number" class="form-input" value="30">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Participants</label>
+                <input type="number" class="form-input" value="10">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Staff Member</label>
+              <select class="form-input">
+                ${mockData.users.filter(u => u.role !== 'Administrator').map(u => `<option>${u.name}</option>`).join('')}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Notes (optional)</label>
+              <textarea class="form-input" rows="3" placeholder="Any observations or comments..."></textarea>
+            </div>
+
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;">
+              <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+              <button class="btn btn-primary" onclick="saveSession()">Save Session</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function showCreatePlaylistModal() {
+      document.getElementById('modal-container').innerHTML = `
+        <div class="modal-overlay" onclick="closeModal(event)">
+          <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+              <h2 class="modal-title">Create Playlist</h2>
+              <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Playlist Name</label>
+              <input type="text" class="form-input" placeholder="e.g., Morning Energizers">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Description (optional)</label>
+              <textarea class="form-input" rows="2" placeholder="What is this playlist for?"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Add Tracks</label>
+              <div style="max-height:300px;overflow-y:auto;border:1px solid #334155;border-radius:8px;">
+                ${mockData.tracks.map(t => `
+                  <label style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #334155;cursor:pointer;">
+                    <input type="checkbox">
+                    <div>
+                      <div style="font-weight:500;">${t.title}</div>
+                      <div style="color:#94A3B8;font-size:13px;">${t.artist} • ${formatDuration(t.duration)}</div>
+                    </div>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;">
+              <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+              <button class="btn btn-primary">Create Playlist</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function showAddUserModal() {
+      document.getElementById('modal-container').innerHTML = `
+        <div class="modal-overlay" onclick="closeModal(event)">
+          <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+              <h2 class="modal-title">Add User</h2>
+              <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" class="form-input" placeholder="Jane Smith">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-input" placeholder="jane.s@facility.com">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Role</label>
+              <select class="form-input">
+                <option>Activity Aide</option>
+                <option>Activity Director</option>
+                <option>Administrator</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" checked> Send welcome email with login instructions
+              </label>
+            </div>
+
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;">
+              <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+              <button class="btn btn-primary">Add User</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function closeModal(event) {
+      if (!event || event.target.classList.contains('modal-overlay')) {
+        document.getElementById('modal-container').innerHTML = '';
+      }
+    }
+
+    function saveSession() {
+      alert('Session logged successfully!');
+      closeModal();
+    }
+
+    // === SETTINGS TAB NAVIGATION ===
+    function showSettingsTab(tab) {
+      // Hide all tabs
+      document.querySelectorAll('.settings-tab').forEach(t => t.classList.add('hidden'));
+      // Show selected tab
+      const selectedTab = document.getElementById('tab-' + tab);
+      if (selectedTab) selectedTab.classList.remove('hidden');
+      // Update tab button styles
+      document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    // === FEATURES PAGE ===
+    function renderFeatures() {
+      const enabledActivities = Object.values(featureConfig.activities).filter(a => a.enabled).length;
+      const totalActivities = Object.keys(featureConfig.activities).length;
+      const enabledModules = Object.values(featureConfig.modules).filter(m => m.enabled).length;
+      const totalModules = Object.keys(featureConfig.modules).length;
+
+      return `
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">🎛️ Feature Management</h1>
+            <p class="page-subtitle">Enable or disable features for your facility</p>
+          </div>
+          <button class="btn btn-primary" onclick="saveFeatureConfig()">
+            💾 Save Changes
+          </button>
+        </div>
+
+        <!-- Feature Stats -->
+        <div class="stats-grid" style="margin-bottom:32px;">
+          <div class="stat-card">
+            <div class="stat-value">${enabledActivities}/${totalActivities}</div>
+            <div class="stat-label">Activity Types Enabled</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${enabledModules}/${totalModules}</div>
+            <div class="stat-label">Modules Enabled</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">Premium</div>
+            <div class="stat-label">Subscription Tier</div>
+            <div class="stat-change">All features available</div>
+          </div>
+        </div>
+
+        <!-- Activity Types -->
+        <div class="card" style="margin-bottom:24px;">
+          <div class="card-header">
+            <h3 class="card-title">🎵 Activity Types</h3>
+            <p style="color:#94A3B8;font-size:14px;">Choose which activity types are available to staff</p>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
+            ${Object.entries(featureConfig.activities).map(([key, activity]) => `
+              <div class="feature-card" style="background:#0F172A;border-radius:12px;padding:20px;border:2px solid ${activity.enabled ? activity.color : '#334155'};transition:all 0.2s;">
+                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:48px;height:48px;background:${activity.color}${activity.enabled ? '' : '33'};border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;">
+                      ${activity.icon}
+                    </div>
+                    <div>
+                      <div style="font-weight:600;font-size:16px;color:${activity.enabled ? '#FFF' : '#64748B'};">${activity.name}</div>
+                      <span class="badge ${activity.enabled ? 'badge-success' : 'badge-warning'}" style="margin-top:4px;">
+                        ${activity.enabled ? 'Enabled' : 'Disabled'}
+                      </span>
+                    </div>
+                  </div>
+                  <button class="toggle ${activity.enabled ? 'active' : ''}" onclick="toggleFeature('activities', '${key}')"></button>
+                </div>
+                <p style="color:#94A3B8;font-size:13px;line-height:1.5;">${activity.description}</p>
+                <div style="margin-top:12px;display:flex;gap:8px;">
+                  <button class="btn btn-secondary btn-sm" onclick="configureFeature('activities', '${key}')">⚙️ Configure</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- System Modules -->
+        <div class="card" style="margin-bottom:24px;">
+          <div class="card-header">
+            <h3 class="card-title">🔧 System Modules</h3>
+            <p style="color:#94A3B8;font-size:14px;">Enable or disable system-wide features</p>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
+            ${Object.entries(featureConfig.modules).map(([key, module]) => `
+              <div class="feature-card" style="background:#0F172A;border-radius:12px;padding:20px;border:2px solid ${module.enabled ? '#4F46E5' : '#334155'};transition:all 0.2s;">
+                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:48px;height:48px;background:${module.enabled ? '#4F46E5' : '#334155'};border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;">
+                      ${module.icon}
+                    </div>
+                    <div>
+                      <div style="font-weight:600;font-size:16px;color:${module.enabled ? '#FFF' : '#64748B'};">${module.name}</div>
+                      <span class="badge ${module.enabled ? 'badge-success' : 'badge-warning'}" style="margin-top:4px;">
+                        ${module.enabled ? 'Enabled' : 'Disabled'}
+                      </span>
+                    </div>
+                  </div>
+                  <button class="toggle ${module.enabled ? 'active' : ''}" onclick="toggleFeature('modules', '${key}')"></button>
+                </div>
+                <p style="color:#94A3B8;font-size:13px;line-height:1.5;">${module.description}</p>
+                <div style="margin-top:12px;display:flex;gap:8px;">
+                  <button class="btn btn-secondary btn-sm" onclick="configureFeature('modules', '${key}')">⚙️ Configure</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">⚡ Quick Actions</h3>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <button class="btn btn-secondary" onclick="enableAllFeatures()">✅ Enable All Activities</button>
+            <button class="btn btn-secondary" onclick="disableAllFeatures()">❌ Disable All Activities</button>
+            <button class="btn btn-secondary" onclick="resetToDefaults()">🔄 Reset to Defaults</button>
+            <button class="btn btn-secondary" onclick="exportFeatureConfig()">📤 Export Config</button>
+            <button class="btn btn-secondary" onclick="importFeatureConfig()">📥 Import Config</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleFeature(category, key) {
+      featureConfig[category][key].enabled = !featureConfig[category][key].enabled;
+      saveToLocalStorage();
+      navigate('features'); // Re-render
+    }
+
+    function configureFeature(category, key) {
+      const feature = featureConfig[category][key];
+      document.getElementById('modal-container').innerHTML = `
+        <div class="modal-overlay" onclick="closeModal(event)">
+          <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+              <h2 class="modal-title">${feature.icon} Configure ${feature.name}</h2>
+              <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:16px;padding:20px;background:#0F172A;border-radius:12px;margin-bottom:24px;">
+              <div style="width:64px;height:64px;background:${feature.color || '#4F46E5'};border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:32px;">
+                ${feature.icon}
+              </div>
+              <div>
+                <div style="font-size:20px;font-weight:600;">${feature.name}</div>
+                <div style="color:#94A3B8;">${feature.description}</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Display Name</label>
+              <input type="text" class="form-input" id="feature-name" value="${feature.name}">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea class="form-input" id="feature-desc" rows="2">${feature.description}</textarea>
+            </div>
+
+            ${category === 'activities' ? `
+              <div class="form-group">
+                <label class="form-label">Theme Color</label>
+                <div style="display:flex;gap:8px;">
+                  ${['#4F46E5', '#DC2626', '#059669', '#D97706', '#0891B2', '#9333EA', '#EC4899', '#6366F1'].map(color => `
+                    <button onclick="setFeatureColor('${category}', '${key}', '${color}')"
+                            style="width:40px;height:40px;border-radius:8px;background:${color};border:3px solid ${feature.color === color ? '#FFF' : 'transparent'};cursor:pointer;">
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Default Settings</label>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#0F172A;border-radius:8px;">
+                    <span>Show in Quick Start menu</span>
+                    <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#0F172A;border-radius:8px;">
+                    <span>Allow staff to use this activity</span>
+                    <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#0F172A;border-radius:8px;">
+                    <span>Track in compliance reports</span>
+                    <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                  </div>
+                </div>
+              </div>
+            ` : `
+              <div class="form-group">
+                <label class="form-label">Module Settings</label>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#0F172A;border-radius:8px;">
+                    <span>Available to all users</span>
+                    <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#0F172A;border-radius:8px;">
+                    <span>Show in sidebar navigation</span>
+                    <button class="toggle active" onclick="this.classList.toggle('active')"></button>
+                  </div>
+                </div>
+              </div>
+            `}
+
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;">
+              <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+              <button class="btn btn-primary" onclick="saveFeatureSettings('${category}', '${key}')">Save Settings</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function setFeatureColor(category, key, color) {
+      featureConfig[category][key].color = color;
+      saveToLocalStorage();
+      configureFeature(category, key); // Re-render modal
+    }
+
+    function saveFeatureSettings(category, key) {
+      const name = document.getElementById('feature-name').value;
+      const desc = document.getElementById('feature-desc').value;
+      featureConfig[category][key].name = name;
+      featureConfig[category][key].description = desc;
+      saveToLocalStorage();
+      closeModal();
+      navigate('features');
+    }
+
+    function enableAllFeatures() {
+      Object.keys(featureConfig.activities).forEach(key => {
+        featureConfig.activities[key].enabled = true;
+      });
+      saveToLocalStorage();
+      navigate('features');
+    }
+
+    function disableAllFeatures() {
+      Object.keys(featureConfig.activities).forEach(key => {
+        featureConfig.activities[key].enabled = false;
+      });
+      saveToLocalStorage();
+      navigate('features');
+    }
+
+    function resetToDefaults() {
+      if (confirm('Reset all features to default settings?')) {
+        featureConfig = JSON.parse(JSON.stringify(defaultFeatureConfig));
+        saveToLocalStorage();
+        navigate('features');
+      }
+    }
+
+    function saveFeatureConfig() {
+      saveToLocalStorage();
+      alert('Feature configuration saved successfully!');
+    }
+
+    function exportFeatureConfig() {
+      const dataStr = JSON.stringify(featureConfig, null, 2);
+      const blob = new Blob([dataStr], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'silverstream-features.json';
+      a.click();
+    }
+
+    function importFeatureConfig() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const config = JSON.parse(event.target.result);
+            featureConfig = config;
+            saveToLocalStorage();
+            navigate('features');
+            alert('Configuration imported successfully!');
+          } catch (err) {
+            alert('Error importing configuration file.');
+          }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
+
+    // === NAVIGATION ===
+    function navigate(page) {
+      currentPage = page;
+      
+      // Update nav
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.page === page);
+      });
+      
+      // Render page
+      const content = document.getElementById('main-content');
+      switch (page) {
+        case 'dashboard': content.innerHTML = renderDashboard(); break;
+        case 'videos': content.innerHTML = renderVideoLibrary(); break;
+        case 'playlists': content.innerHTML = renderPlaylists(); break;
+        case 'channels': content.innerHTML = renderChannels(); break;
+        case 'analytics': content.innerHTML = renderAnalytics(); break;
+        case 'sessions': content.innerHTML = renderSessions(); break;
+        case 'compliance': content.innerHTML = renderCompliance(); break;
+        case 'features': content.innerHTML = renderFeatures(); break;
+        case 'facility': content.innerHTML = renderFacility(); break;
+        case 'users': content.innerHTML = renderUsers(); break;
+        case 'settings': content.innerHTML = renderSettings(); break;
+      }
+    }
+
+    // === UTILITIES ===
+    function filterTracks(query) {
+      const rows = document.querySelectorAll('#tracks-table tbody tr');
+      const q = query.toLowerCase();
+      rows.forEach(row => {
+        const title = row.dataset.title;
+        const artist = row.dataset.artist;
+        row.style.display = (title.includes(q) || artist.includes(q)) ? '' : 'none';
+      });
+    }
+
+    function previewTrack(id) {
+      alert('Preview: ' + id);
+    }
+
+    function editPlaylist(id) {
+      alert('Edit playlist: ' + id);
+    }
+
+    // === INIT ===
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => navigate(item.dataset.page));
+    });
+
+    navigate('dashboard');
+  </script>
+</body>
+</html>

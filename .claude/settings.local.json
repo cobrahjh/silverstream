@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm start)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)",
+      "Bash(findstr:*)",
+      "Bash(node --check:*)",
+      "Bash(node:*)",
+      "Bash(npm install:*)",
+      "Bash(netstat:*)",
+      "Bash(start http://localhost:8900/silverstream.html)",
+      "Bash(start http://localhost:8900/admin.html)",
+      "Bash(git init:*)",
+      "Bash(gh auth:*)",
+      "Bash(git -C C:/Projects/silverstream add -A)",
+      "Bash(git -C C:/Projects/silverstream status)"
+    ]
+  }
+}

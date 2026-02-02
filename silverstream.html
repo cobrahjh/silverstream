@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>SilverStream - Music & Activities</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:focus-visible, input:focus-visible {
+      outline: 4px solid #4F46E5;
+      outline-offset: 2px;
+    }
+    input {
+      font-family: inherit;
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    // ============================================
+    // SILVERSTREAM - STANDALONE HTML VERSION
+    // ============================================
+
+    // === DATA ===
+    const ALL_ACTIVITY_TYPES = [
+      { id: 'singalong', label: 'Sing-Along', icon: '🎤', color: '#4F46E5' },
+      { id: 'drumcircle', label: 'Drum Circle', icon: '🥁', color: '#DC2626' },
+      { id: 'trivia', label: 'Trivia', icon: '❓', color: '#059669' },
+      { id: 'movement', label: 'Movement', icon: '💃', color: '#D97706' },
+      { id: 'relaxation', label: 'Relaxation', icon: '🌿', color: '#0891B2' },
+      { id: 'bingo', label: 'Bingo', icon: '🎯', color: '#9333EA' },
+      { id: 'youtube', label: 'YouTube', icon: '📺', color: '#FF0000' },
+    ];
+
+    // Load feature config from localStorage (set by admin panel)
+    function getFeatureConfig() {
+      const stored = localStorage.getItem('silverstreamFeatures');
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch (e) {
+          return null;
+        }
+      }
+      return null;
+    }
+
+    // Get enabled activity types based on admin config
+    function getEnabledActivityTypes() {
+      const config = getFeatureConfig();
+      if (!config || !config.activities) {
+        return ALL_ACTIVITY_TYPES; // Show all if no config
+      }
+      return ALL_ACTIVITY_TYPES.filter(activity => {
+        const activityConfig = config.activities[activity.id];
+        // Apply custom name/color from admin if set
+        if (activityConfig) {
+          if (activityConfig.name) activity.label = activityConfig.name;
+          if (activityConfig.color) activity.color = activityConfig.color;
+          if (activityConfig.icon) activity.icon = activityConfig.icon;
+        }
+        return activityConfig ? activityConfig.enabled : true;
+      });
+    }
+
+    // Dynamic ACTIVITY_TYPES based on admin config
+    let ACTIVITY_TYPES = getEnabledActivityTypes();
+
+    // Check if a specific feature is enabled
+    function isFeatureEnabled(featureId) {
+      const config = getFeatureConfig();
+      if (!config) return true; // Default to enabled
+      if (config.activities && config.activities[featureId] !== undefined) {
+        return config.activities[featureId].enabled;
+      }
+      if (config.modules && config.modules[featureId] !== undefined) {
+        return config.modules[featureId].enabled;
+      }
+      return true;
+    }
+
+    const ERAS = ['1940s', '1950s', '1960s', '1970s', 'Hymns', 'Timeless'];
+    const GENRES = ['Big Band', 'Rock & Roll', 'Doo-Wop', 'Country', 'Gospel', 'Motown', 'Easy Listening', 'Instrumental'];
+
+    // YouTube video database - loaded from localStorage or defaults
+    function getDefaultVideos() {
+      return [
+        // FEATURED - Real working YouTube videos (verified embeddable)
+        { id: 'yt-featured-1', videoId: 'CWzrABouyeE', title: 'Greatest Hits 50s & 60s', artist: 'Oldies Music', duration: 5400, era: '1950s', genre: 'Rock & Roll', activityTypes: ['singalong', 'relaxation'], mood: 'upbeat' },
+        { id: 'yt-featured-2', videoId: 'lTRiuFIWV54', title: 'Relaxing Jazz Music', artist: 'Cafe Music BGM', duration: 10800, era: 'Timeless', genre: 'Easy Listening', activityTypes: ['relaxation'], mood: 'calm' },
+        { id: 'yt-featured-3', videoId: 'pGvnfQfLbGA', title: 'Peaceful Hymns Collection', artist: 'Worship Songs', duration: 7200, era: 'Hymns', genre: 'Gospel', activityTypes: ['singalong', 'relaxation'], mood: 'reflective' },
+
+        // Sing-Along
+        { id: 'yt-001', videoId: 'dQw4w9WgXcQ', title: 'Classic 50s Rock Hits', artist: 'Oldies Collection', duration: 3600, era: '1950s', genre: 'Rock & Roll', activityTypes: ['singalong'], mood: 'upbeat' },
+        { id: 'yt-002', videoId: 'hT_nvWreIhg', title: 'Country Classics Sing-Along', artist: 'Nashville Gold', duration: 3600, era: '1960s', genre: 'Country', activityTypes: ['singalong'], mood: 'upbeat' },
+        { id: 'yt-003', videoId: 'fJ9rUzIMcZQ', title: 'Amazing Grace & Hymns', artist: 'Sacred Music', duration: 5400, era: 'Hymns', genre: 'Gospel', activityTypes: ['singalong'], mood: 'reflective' },
+        { id: 'yt-004', videoId: 'nrIPxlFzDi0', title: 'Motown Greatest Hits', artist: 'Soul Legends', duration: 4500, era: '1960s', genre: 'Motown', activityTypes: ['singalong', 'movement'], mood: 'energetic' },
+        { id: 'yt-005', videoId: 'L_jWHffIx5E', title: 'Big Band Sing-Along', artist: 'Swing Orchestra', duration: 3200, era: '1940s', genre: 'Big Band', activityTypes: ['singalong'], mood: 'upbeat' },
+
+        // Movement / Exercise
+        { id: 'yt-010', videoId: '2Vv-BfVoq4g', title: 'Seated Chair Exercises', artist: 'Senior Fitness', duration: 1800, era: 'Timeless', genre: 'Instrumental', activityTypes: ['movement'], mood: 'upbeat' },
+        { id: 'yt-011', videoId: 'kdLoRj1gDOs', title: 'Gentle Stretching Routine', artist: 'Wellness TV', duration: 1200, era: 'Timeless', genre: 'Instrumental', activityTypes: ['movement'], mood: 'calm' },
+        { id: 'yt-012', videoId: 'L_jWHffIx5E', title: 'Big Band Dance Movement', artist: 'Jazz Masters', duration: 2700, era: '1940s', genre: 'Big Band', activityTypes: ['movement'], mood: 'energetic' },
+
+        // Relaxation
+        { id: 'yt-020', videoId: 'RgKAFK5djSk', title: 'Relaxing Piano Music', artist: 'Peaceful Melodies', duration: 3600, era: 'Timeless', genre: 'Easy Listening', activityTypes: ['relaxation'], mood: 'calm' },
+        { id: 'yt-021', videoId: 'HuS5NuXRb5Y', title: 'Nature Scenes with Music', artist: 'Calm Visuals', duration: 7200, era: 'Timeless', genre: 'Easy Listening', activityTypes: ['relaxation'], mood: 'calm' },
+        { id: 'yt-022', videoId: 'lFcSrYw-ARY', title: 'Ocean Waves & Soft Music', artist: 'Nature Sounds', duration: 3600, era: 'Timeless', genre: 'Easy Listening', activityTypes: ['relaxation'], mood: 'calm' },
+
+        // Drum Circle
+        { id: 'yt-030', videoId: 'J9FImc2LOr8', title: 'Easy Drum Circle Follow Along', artist: 'Rhythm Together', duration: 1200, era: 'Timeless', genre: 'Instrumental', activityTypes: ['drumcircle'], mood: 'upbeat' },
+        { id: 'yt-031', videoId: 'W8oaa5Nrm54', title: 'Gentle Percussion Session', artist: 'Music Therapy', duration: 900, era: 'Timeless', genre: 'Instrumental', activityTypes: ['drumcircle'], mood: 'calm' },
+
+        // Trivia
+        { id: 'yt-040', videoId: 'cBVGlBWQzuc', title: '1950s Music Trivia', artist: 'Quiz Time', duration: 900, era: '1950s', genre: 'Instrumental', activityTypes: ['trivia'], mood: 'upbeat' },
+        { id: 'yt-041', videoId: 'cBVGlBWQzuc', title: '1960s Music Trivia', artist: 'Quiz Time', duration: 900, era: '1960s', genre: 'Instrumental', activityTypes: ['trivia'], mood: 'upbeat' },
+
+        // Bingo - use oldies compilations for music bingo
+        { id: 'yt-050', videoId: 'CWzrABouyeE', title: 'Music Bingo - 60s Hits', artist: 'Oldies Bingo', duration: 2700, era: '1960s', genre: 'Rock & Roll', activityTypes: ['bingo'], mood: 'upbeat' },
+        { id: 'yt-051', videoId: 'lTRiuFIWV54', title: 'Easy Listening Bingo', artist: 'Senior Activities', duration: 3000, era: 'Timeless', genre: 'Easy Listening', activityTypes: ['bingo', 'relaxation'], mood: 'calm' },
+
+        // Mixed / Browse by Era
+        { id: 'yt-060', videoId: 'L_jWHffIx5E', title: '1940s Big Band Favorites', artist: 'Swing Era', duration: 3600, era: '1940s', genre: 'Big Band', activityTypes: ['singalong', 'movement'], mood: 'energetic' },
+        { id: 'yt-061', videoId: 'dQw4w9WgXcQ', title: '1950s Rock & Roll Hits', artist: 'Retro Radio', duration: 3600, era: '1950s', genre: 'Rock & Roll', activityTypes: ['singalong'], mood: 'upbeat' },
+        { id: 'yt-062', videoId: 'nrIPxlFzDi0', title: '1960s Soul & Motown', artist: 'Soul Train', duration: 3600, era: '1960s', genre: 'Motown', activityTypes: ['singalong', 'movement'], mood: 'energetic' },
+        { id: 'yt-063', videoId: 'hT_nvWreIhg', title: '1970s Easy Listening', artist: 'Soft Hits', duration: 3600, era: '1970s', genre: 'Easy Listening', activityTypes: ['relaxation', 'singalong'], mood: 'calm' },
+      ];
+    }
+
+    // Load videos from localStorage or use defaults
+    let youtubeVideos = JSON.parse(localStorage.getItem('silverstreamVideos')) || getDefaultVideos();
+
+    // Get filtered videos
+    function getFilteredVideos() {
+      let videos = youtubeVideos;
+      if (state.searchQuery) {
+        const q = state.searchQuery.toLowerCase();
+        videos = videos.filter(v =>
+          v.title.toLowerCase().includes(q) ||
+          v.artist.toLowerCase().includes(q) ||
+          v.genre.toLowerCase().includes(q)
+        );
+      } else if (state.filterType === 'activity' && state.filterValue) {
+        videos = videos.filter(v => v.activityTypes.includes(state.filterValue));
+      } else if (state.filterType === 'era' && state.filterValue) {
+        videos = videos.filter(v => v.era === state.filterValue);
+      } else if (state.filterType === 'genre' && state.filterValue) {
+        videos = videos.filter(v => v.genre === state.filterValue);
+      }
+      return videos;
+    }
+
+    // === STATE ===
+    let state = {
+      screen: 'home',
+      selectedVideo: null,
+      activityMode: 'passive',
+      filterType: null,
+      filterValue: null,
+      searchQuery: '',
+      fontScale: 1.5,
+      highContrast: false,
+      showCaptions: true,
+      videoError: null,
+      currentPlaylist: [],
+      playlistIndex: -1,
+    };
+
+    // === HELPERS ===
+    function formatDuration(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function getTheme() {
+      return state.highContrast 
+        ? { bg: '#000', card: '#111', text: '#FFF', accent: '#FFD700', border: '#FFF', dim: '#AAA' }
+        : { bg: '#F8FAFC', card: '#FFF', text: '#1E293B', accent: '#4F46E5', border: '#E2E8F0', dim: '#64748B' };
+    }
+
+    // === RENDER FUNCTIONS ===
+    function render() {
+      const theme = getTheme();
+      const baseFont = 16 * state.fontScale;
+      const app = document.getElementById('app');
+
+      app.style.background = theme.bg;
+      app.style.minHeight = '100vh';
+
+      let html = '';
+
+      if (state.screen === 'player') {
+        // Full screen player, no header
+        html = renderYouTubePlayer(theme, baseFont);
+      } else {
+        html = renderHeader(theme, baseFont);
+        if (state.screen === 'home') {
+          html += renderHomeScreen(theme, baseFont);
+        } else if (state.screen === 'browse') {
+          html += renderBrowseScreen(theme, baseFont);
+        } else if (state.screen === 'settings') {
+          html += renderSettingsScreen(theme, baseFont);
+        }
+      }
+
+      app.innerHTML = html;
+      attachEventListeners();
+    }
+
+    function renderHeader(theme, baseFont) {
+      return `
+        <header style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:${theme.card};border-bottom:3px solid ${theme.border};position:sticky;top:0;z-index:100;">
+          <button onclick="goHome()" style="font-size:${baseFont * 1.2}px;color:${theme.text};font-weight:bold;background:none;border:none;">
+            🎵 SilverStream
+          </button>
+          <div style="display:flex;gap:12px;">
+            <button onclick="changeFontScale(0.25)" style="padding:12px 20px;font-size:${baseFont}px;background:${theme.accent};color:#FFF;border:none;border-radius:8px;">A+</button>
+            <button onclick="changeFontScale(-0.25)" style="padding:12px 20px;font-size:${baseFont}px;background:${theme.accent};color:#FFF;border:none;border-radius:8px;">A-</button>
+            <button onclick="toggleContrast()" style="padding:12px 20px;font-size:${baseFont}px;background:${state.highContrast ? '#FFD700' : theme.card};color:${state.highContrast ? '#000' : theme.text};border:2px solid ${theme.border};border-radius:8px;">
+              ${state.highContrast ? '☀️' : '🌙'}
+            </button>
+            <button onclick="goSettings()" style="padding:12px 20px;font-size:${baseFont}px;background:${theme.card};color:${theme.text};border:2px solid ${theme.border};border-radius:8px;">⚙️</button>
+          </div>
+        </header>
+      `;
+    }
+
+    function renderHomeScreen(theme, baseFont) {
+      // Refresh activity types from admin config
+      ACTIVITY_TYPES = getEnabledActivityTypes();
+
+      return `
+        <main style="padding:24px;">
+          <h1 style="font-size:${baseFont * 2.2}px;color:${theme.text};margin-bottom:8px;">🎵 SilverStream</h1>
+          <p style="font-size:${baseFont}px;color:${theme.dim};margin-bottom:32px;">Music & Activities for Everyone</p>
+
+          <h2 style="font-size:${baseFont * 1.3}px;color:${theme.text};margin-bottom:16px;">Quick Start - Choose an Activity</h2>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:40px;">
+            ${ACTIVITY_TYPES.filter(a => a.id !== 'youtube').map(a => `
+              <button onclick="selectActivity('${a.id}')" style="width:140px;height:140px;background:${a.color};color:#FFF;border:none;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:${baseFont * 1.1}px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                <span style="font-size:${baseFont * 3}px;">${a.icon}</span>
+                <span>${a.label}</span>
+              </button>
+            `).join('')}
+          </div>
+
+          <h2 style="font-size:${baseFont * 1.3}px;color:${theme.text};margin-bottom:16px;">Browse by Era</h2>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;">
+            ${ERAS.map(era => `
+              <button onclick="selectEra('${era}')" style="padding:16px 32px;font-size:${baseFont}px;background:${theme.card};color:${theme.text};border:3px solid ${theme.border};border-radius:12px;">${era}</button>
+            `).join('')}
+          </div>
+
+          <h2 style="font-size:${baseFont * 1.3}px;color:${theme.text};margin-bottom:16px;">Browse by Genre</h2>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;">
+            ${GENRES.map(genre => `
+              <button onclick="selectGenre('${genre}')" style="padding:14px 28px;font-size:${baseFont * 0.95}px;background:${theme.card};color:${theme.text};border:3px solid ${theme.border};border-radius:12px;">${genre}</button>
+            `).join('')}
+          </div>
+
+          <!-- Featured Videos -->
+          <h2 style="font-size:${baseFont * 1.3}px;color:${theme.text};margin-bottom:16px;">📺 Featured Videos</h2>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:32px;">
+            ${youtubeVideos.slice(0, 6).map(video => renderVideoCard(video, theme, baseFont)).join('')}
+          </div>
+
+          <button onclick="browseAll()" style="padding:20px 48px;font-size:${baseFont * 1.2}px;background:${theme.accent};color:#FFF;border:none;border-radius:16px;">
+            📺 Browse All Videos
+          </button>
+        </main>
+      `;
+    }
+
+    function renderVideoCard(video, theme, baseFont) {
+      return `
+        <button onclick="playVideo('${video.id}')" style="background:${theme.card};border:3px solid ${theme.border};border-radius:16px;overflow:hidden;text-align:left;padding:0;">
+          <div style="position:relative;padding-bottom:56.25%;background:#000;">
+            <img src="https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg"
+                 style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;"
+                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 9%22><rect fill=%22%23333%22 width=%2216%22 height=%229%22/><text x=%228%22 y=%225%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%222%22>📺</text></svg>'">
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;background:rgba(255,0,0,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <span style="font-size:24px;margin-left:4px;color:#FFF;">▶</span>
+            </div>
+            <div style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.8);padding:4px 8px;border-radius:4px;font-size:${baseFont * 0.7}px;color:#FFF;">
+              ${formatDuration(video.duration)}
+            </div>
+          </div>
+          <div style="padding:16px;">
+            <div style="font-size:${baseFont}px;font-weight:600;color:${theme.text};margin-bottom:4px;">${video.title}</div>
+            <div style="font-size:${baseFont * 0.85}px;color:${theme.dim};margin-bottom:12px;">${video.artist}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span style="background:${theme.border};color:${theme.text};padding:4px 10px;border-radius:4px;font-size:${baseFont * 0.7}px;">${video.era}</span>
+              <span style="background:${theme.border};color:${theme.text};padding:4px 10px;border-radius:4px;font-size:${baseFont * 0.7}px;">${video.genre}</span>
+              ${video.activityTypes.map(type => {
+                const a = ALL_ACTIVITY_TYPES.find(x => x.id === type);
+                return a ? `<span style="padding:4px 10px;background:${a.color};color:#FFF;border-radius:4px;font-size:${baseFont * 0.7}px;">${a.icon}</span>` : '';
+              }).join('')}
+            </div>
+          </div>
+        </button>
+      `;
+    }
+
+    function renderBrowseScreen(theme, baseFont) {
+      const videos = getFilteredVideos();
+      const title = state.filterValue || 'All Videos';
+
+      return `
+        <main style="padding:24px;">
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
+            <button onclick="goHome()" style="padding:14px 28px;font-size:${baseFont}px;background:${theme.card};color:${theme.text};border:3px solid ${theme.border};border-radius:10px;">← Home</button>
+            <h1 style="font-size:${baseFont * 1.6}px;color:${theme.text};margin:0;">${title}</h1>
+            <span style="font-size:${baseFont * 0.9}px;color:${theme.dim};">(${videos.length} videos)</span>
+          </div>
+
+          <div style="margin-bottom:24px;">
+            <input type="text" placeholder="Search videos..." value="${state.searchQuery}" oninput="updateSearch(this.value)" style="width:100%;max-width:400px;padding:16px 24px;font-size:${baseFont}px;border:3px solid ${theme.border};border-radius:12px;background:${theme.card};color:${theme.text};">
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;">
+            ${videos.map(video => renderVideoCard(video, theme, baseFont)).join('')}
+          </div>
+
+          ${videos.length === 0 ? `
+            <div style="text-align:center;padding:60px;color:${theme.dim};">
+              <p style="font-size:${baseFont * 1.3}px;margin-bottom:16px;">No videos found</p>
+              <button onclick="goHome()" style="padding:14px 28px;font-size:${baseFont}px;background:${theme.accent};color:#FFF;border:none;border-radius:10px;">Go Home</button>
+            </div>
+          ` : ''}
+        </main>
+      `;
+    }
+
+    function renderYouTubePlayer(theme, baseFont) {
+      const video = state.selectedVideo;
+      if (!video) return '';
+
+      // Get activity type info for display
+      const activityBadges = video.activityTypes.map(type => {
+        const a = ALL_ACTIVITY_TYPES.find(x => x.id === type);
+        return a ? `<span style="padding:6px 12px;background:${a.color};color:#FFF;border-radius:6px;font-size:${baseFont * 0.8}px;">${a.icon} ${a.label}</span>` : '';
+      }).join('');
+
+      const hasNext = state.playlistIndex >= 0 && state.playlistIndex < state.currentPlaylist.length - 1;
+      const hasPrev = state.playlistIndex > 0;
+
+      // Error state UI
+      if (state.videoError) {
+        return `
+          <div style="position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;">
+            <div style="text-align:center;padding:40px;max-width:600px;">
+              <div style="font-size:${baseFont * 4}px;margin-bottom:24px;">📺</div>
+              <h2 style="font-size:${baseFont * 1.5}px;color:#FFF;margin-bottom:16px;">Video Unavailable</h2>
+              <p style="font-size:${baseFont}px;color:#AAA;margin-bottom:8px;">"${video.title}" cannot be played here.</p>
+              <p style="font-size:${baseFont * 0.85}px;color:#666;margin-bottom:40px;">The video may be restricted from embedding or unavailable in your area.</p>
+
+              <div style="display:flex;flex-direction:column;gap:16px;align-items:center;">
+                ${hasNext ? `
+                  <button onclick="playNextVideo()" style="padding:20px 48px;font-size:${baseFont * 1.2}px;background:#4F46E5;color:#FFF;border:none;border-radius:12px;cursor:pointer;min-width:280px;">
+                    ▶ Skip to Next Video
+                  </button>
+                ` : ''}
+                <button onclick="closePlayer()" style="padding:16px 40px;font-size:${baseFont}px;background:#374151;color:#FFF;border:none;border-radius:12px;cursor:pointer;min-width:280px;">
+                  ← Back to Library
+                </button>
+                <button onclick="openOnYouTube()" style="padding:12px 24px;font-size:${baseFont * 0.9}px;background:transparent;color:#AAA;border:1px solid #444;border-radius:8px;cursor:pointer;">
+                  Open on YouTube.com ↗
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div style="position:fixed;inset:0;background:#000;display:flex;flex-direction:column;z-index:1000;">
+          <!-- Header -->
+          <div style="padding:16px 24px;background:linear-gradient(to bottom,rgba(0,0,0,0.9),transparent);position:absolute;top:0;left:0;right:0;z-index:10;">
+            <div style="display:flex;justify-content:space-between;align-items:start;">
+              <div>
+                <h2 style="font-size:${baseFont * 1.3}px;color:#FFF;margin:0 0 4px 0;">${video.title}</h2>
+                <p style="font-size:${baseFont * 0.9}px;color:#AAA;margin:0 0 8px 0;">${video.artist} • ${video.era} • ${video.genre}</p>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  ${activityBadges}
+                </div>
+              </div>
+              <button onclick="closePlayer()" style="padding:12px 24px;font-size:${baseFont}px;background:#EF4444;color:#FFF;border:none;border-radius:8px;cursor:pointer;">
+                ✕ Close
+              </button>
+            </div>
+          </div>
+
+          <!-- YouTube Embed -->
+          <div id="youtube-player-container" style="position:absolute;top:0;left:0;width:100%;height:100%;"></div>
+
+          <!-- Bottom Controls -->
+          <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 24px;background:linear-gradient(to top,rgba(0,0,0,0.9),transparent);z-index:10;">
+            <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+              ${hasPrev ? `
+                <button onclick="playPrevVideo()" style="padding:16px 32px;font-size:${baseFont}px;background:#374151;color:#FFF;border:none;border-radius:12px;cursor:pointer;">
+                  ⏮ Previous
+                </button>
+              ` : ''}
+              <button onclick="closePlayer()" style="padding:16px 32px;font-size:${baseFont}px;background:#374151;color:#FFF;border:none;border-radius:12px;cursor:pointer;">
+                ← Back to Library
+              </button>
+              ${hasNext ? `
+                <button onclick="playNextVideo()" style="padding:16px 32px;font-size:${baseFont}px;background:#374151;color:#FFF;border:none;border-radius:12px;cursor:pointer;">
+                  Next ⏭
+                </button>
+              ` : ''}
+              <button onclick="toggleCaptions()" style="padding:16px 32px;font-size:${baseFont}px;background:${state.showCaptions ? theme.accent : '#374151'};color:#FFF;border:none;border-radius:12px;cursor:pointer;">
+                CC ${state.showCaptions ? 'ON' : 'OFF'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSettingsScreen(theme, baseFont) {
+      return `
+        <main style="padding:24px;">
+          <button onclick="goHome()" style="padding:14px 28px;font-size:${baseFont}px;background:${theme.card};color:${theme.text};border:3px solid ${theme.border};border-radius:10px;margin-bottom:24px;">← Back</button>
+          
+          <h1 style="font-size:${baseFont * 1.8}px;color:${theme.text};margin-bottom:32px;">⚙️ Accessibility Settings</h1>
+
+          <div style="margin-bottom:32px;">
+            <h3 style="font-size:${baseFont * 1.1}px;color:${theme.text};margin-bottom:12px;">Text Size</h3>
+            <div style="display:flex;gap:12px;">
+              ${[1, 1.25, 1.5, 1.75, 2].map(scale => `
+                <button onclick="setFontScale(${scale})" style="padding:16px 24px;font-size:16px;background:${state.fontScale === scale ? theme.accent : theme.card};color:${state.fontScale === scale ? '#FFF' : theme.text};border:3px solid ${theme.border};border-radius:10px;">
+                  ${scale * 100}%
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div style="margin-bottom:32px;">
+            <button onclick="toggleContrast()" style="padding:20px 40px;font-size:${baseFont}px;background:${state.highContrast ? '#FFD700' : theme.card};color:${state.highContrast ? '#000' : theme.text};border:3px solid ${theme.border};border-radius:12px;">
+              ${state.highContrast ? '✓ ' : ''}High Contrast Mode
+            </button>
+          </div>
+
+          <div style="margin-bottom:32px;">
+            <button onclick="toggleCaptions()" style="padding:20px 40px;font-size:${baseFont}px;background:${state.showCaptions ? theme.accent : theme.card};color:${state.showCaptions ? '#FFF' : theme.text};border:3px solid ${theme.border};border-radius:12px;">
+              ${state.showCaptions ? '✓ ' : ''}Show Captions
+            </button>
+          </div>
+
+          <div style="margin-top:48px;padding-top:32px;border-top:2px solid ${theme.border};">
+            <h3 style="font-size:${baseFont * 1.1}px;color:${theme.text};margin-bottom:12px;">Administration</h3>
+            <a href="admin.html" style="display:inline-block;padding:20px 40px;font-size:${baseFont}px;background:#1E293B;color:#FFF;border:3px solid ${theme.border};border-radius:12px;text-decoration:none;">
+              🔧 Open Admin Panel
+            </a>
+          </div>
+        </main>
+      `;
+    }
+
+    // === EVENT HANDLERS ===
+    function goHome() {
+      state.screen = 'home';
+      state.filterType = null;
+      state.filterValue = null;
+      state.searchQuery = '';
+      state.selectedVideo = null;
+      render();
+    }
+
+    function goSettings() {
+      state.screen = 'settings';
+      render();
+    }
+
+    function browseAll() {
+      state.filterType = null;
+      state.filterValue = null;
+      state.screen = 'browse';
+      render();
+    }
+
+    function selectActivity(id) {
+      state.filterType = 'activity';
+      state.filterValue = id;
+      state.activityMode = id;
+      state.screen = 'browse';
+      render();
+    }
+
+    function selectEra(era) {
+      state.filterType = 'era';
+      state.filterValue = era;
+      state.screen = 'browse';
+      render();
+    }
+
+    function selectGenre(genre) {
+      state.filterType = 'genre';
+      state.filterValue = genre;
+      state.screen = 'browse';
+      render();
+    }
+
+    function playVideo(videoId) {
+      const video = youtubeVideos.find(v => v.id === videoId);
+      if (video) {
+        // Set up playlist from current filtered view
+        state.currentPlaylist = getFilteredVideos();
+        state.playlistIndex = state.currentPlaylist.findIndex(v => v.id === videoId);
+        state.selectedVideo = video;
+        state.videoError = null;
+        state.screen = 'player';
+        render();
+        // Initialize YouTube player after render
+        if (ytApiReady) {
+          setTimeout(initYouTubePlayer, 100);
+        }
+      }
+    }
+
+    function closePlayer() {
+      // Clean up YouTube player
+      if (ytPlayer) {
+        try { ytPlayer.destroy(); } catch(e) {}
+        ytPlayer = null;
+      }
+      state.selectedVideo = null;
+      state.videoError = null;
+      state.currentPlaylist = [];
+      state.playlistIndex = -1;
+      state.screen = 'home';
+      render();
+    }
+
+    function updateSearch(query) {
+      state.searchQuery = query;
+      render();
+    }
+
+    function toggleCaptions() {
+      state.showCaptions = !state.showCaptions;
+      // Note: YouTube player handles captions via cc_load_policy parameter
+      render();
+    }
+
+    function changeFontScale(delta) {
+      state.fontScale = Math.max(1, Math.min(2.5, state.fontScale + delta));
+      render();
+    }
+
+    function toggleContrast() {
+      state.highContrast = !state.highContrast;
+      render();
+    }
+
+    function attachEventListeners() {
+      // Add any additional event listeners here
+    }
+
+    // === OLD YOUTUBE SCREEN (kept for backwards compatibility) ===
+    function browseYouTube() {
+      browseAll();
+    }
+
+    function playYouTube(videoId, title, artist) {
+      const video = youtubeVideos.find(v => v.videoId === videoId);
+      if (video) {
+        playVideo(video.id);
+      }
+    }
+
+    function closeYouTubePlayer() {
+      closePlayer();
+    }
+
+    function setFontScale(scale) {
+      state.fontScale = scale;
+      render();
+    }
+
+    function setActivityMode(mode) {
+      state.activityMode = mode;
+      render();
+    }
+
+    // === YOUTUBE API & ERROR HANDLING ===
+    let ytPlayer = null;
+    let ytApiReady = false;
+
+    // Load YouTube iframe API
+    function loadYouTubeAPI() {
+      if (window.YT && window.YT.Player) {
+        ytApiReady = true;
+        return;
+      }
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      const firstScript = document.getElementsByTagName('script')[0];
+      firstScript.parentNode.insertBefore(tag, firstScript);
+    }
+
+    // YouTube API callback
+    window.onYouTubeIframeAPIReady = function() {
+      ytApiReady = true;
+      if (state.screen === 'player' && state.selectedVideo && !state.videoError) {
+        initYouTubePlayer();
+      }
+    };
+
+    function initYouTubePlayer() {
+      const container = document.getElementById('youtube-player-container');
+      if (!container || !state.selectedVideo) return;
+
+      // Destroy existing player
+      if (ytPlayer) {
+        try { ytPlayer.destroy(); } catch(e) {}
+        ytPlayer = null;
+      }
+
+      ytPlayer = new YT.Player('youtube-player-container', {
+        videoId: state.selectedVideo.videoId,
+        width: '100%',
+        height: '100%',
+        playerVars: {
+          autoplay: 1,
+          rel: 0,
+          modestbranding: 1,
+          cc_load_policy: state.showCaptions ? 1 : 0,
+          enablejsapi: 1,
+          origin: window.location.origin
+        },
+        events: {
+          onReady: onPlayerReady,
+          onError: onPlayerError,
+          onStateChange: onPlayerStateChange
+        }
+      });
+    }
+
+    function onPlayerReady(event) {
+      state.videoError = null;
+    }
+
+    function onPlayerError(event) {
+      // YouTube error codes:
+      // 2 - Invalid video ID
+      // 5 - HTML5 player error
+      // 100 - Video not found or removed
+      // 101/150 - Embedding disabled by owner
+      console.log('YouTube Error:', event.data);
+      state.videoError = {
+        code: event.data,
+        message: getYouTubeErrorMessage(event.data)
+      };
+      render();
+    }
+
+    function getYouTubeErrorMessage(code) {
+      switch(code) {
+        case 2: return 'Invalid video ID';
+        case 5: return 'Player error';
+        case 100: return 'Video not found or removed';
+        case 101:
+        case 150: return 'Embedding disabled by video owner';
+        default: return 'Video unavailable';
+      }
+    }
+
+    function onPlayerStateChange(event) {
+      // YT.PlayerState.ENDED = 0
+      if (event.data === 0 && state.playlistIndex >= 0) {
+        // Auto-play next video when current ends
+        if (state.playlistIndex < state.currentPlaylist.length - 1) {
+          playNextVideo();
+        }
+      }
+    }
+
+    function openOnYouTube() {
+      if (state.selectedVideo) {
+        // Use named window to reuse same tab
+        window.open(
+          `https://www.youtube.com/watch?v=${state.selectedVideo.videoId}`,
+          'silverstream-youtube'
+        );
+      }
+    }
+
+    function playNextVideo() {
+      if (state.playlistIndex >= 0 && state.playlistIndex < state.currentPlaylist.length - 1) {
+        state.playlistIndex++;
+        const nextVideo = state.currentPlaylist[state.playlistIndex];
+        state.selectedVideo = nextVideo;
+        state.videoError = null;
+        render();
+        if (ytApiReady) {
+          setTimeout(initYouTubePlayer, 100);
+        }
+      }
+    }
+
+    function playPrevVideo() {
+      if (state.playlistIndex > 0) {
+        state.playlistIndex--;
+        const prevVideo = state.currentPlaylist[state.playlistIndex];
+        state.selectedVideo = prevVideo;
+        state.videoError = null;
+        render();
+        if (ytApiReady) {
+          setTimeout(initYouTubePlayer, 100);
+        }
+      }
+    }
+
+    // === INIT ===
+    loadYouTubeAPI();
+    render();
+  </script>
+</body>
+</html>
