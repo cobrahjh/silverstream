@@ -8,7 +8,7 @@
 
 ## Overview
 
-[Brief description of what this service does]
+SilverStream is a web-based music and activity platform designed for senior living and care facilities. It provides a YouTube video library categorized by era (1940s–1970s, Hymns, Timeless), genre (Big Band, Motown, Gospel, etc.), and activity type (Sing-Along, Drum Circle, Trivia, Movement, Relaxation, Bingo). The frontend features large touch targets, adjustable font scaling, and high contrast mode for accessibility. An admin panel allows staff to customize activities, manage the video library, and configure features. All app logic is client-side with localStorage persistence; the server is a static file host with Hive ecosystem integration.
 
 ---
 
@@ -80,4 +80,10 @@ Edit `config.json`:
 
 ## Development Notes
 
-[Add notes as you develop]
+- All app logic is client-side in `silverstream.html` (main UI) and `admin.html` (admin panel). No frontend framework — vanilla JS with innerHTML rendering and global state.
+- Video library and feature config are stored in `localStorage`. Admin panel writes config that the main app reads.
+- YouTube playback uses the IFrame Player API (`YT.Player`) with error handling for blocked/removed videos and auto-advance playlists.
+- `server.js` is a minimal Express static file server. The only custom endpoints are `/api/health`, `/api/status`, and placeholder `/api/example` routes.
+- Relay integration helpers (`sendAlert`, `storeKnowledge`, `getKnowledge`) are defined but only `sendAlert` is actively used (on startup).
+- `test-browser.js` runs Puppeteer-based smoke tests — requires the server to be running first.
+- `remove.js` is a Hive ecosystem utility for unregistering and deleting the service.
